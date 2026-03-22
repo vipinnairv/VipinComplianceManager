@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vipin's Tax & Compliance Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ── THEME VARIABLES ── */
+:root {
+  --primary:#FF6B35; --primary-light:#FF8C5A; --secondary:#7C3AED;
+  --accent:#10B981; --accent2:#F59E0B; --accent3:#EF4444;
+  --dark:#0F0F1A; --dark2:#1A1A2E; --dark3:#16213E;
+  --card:#1E1E35; --card2:#252540; --border:rgba(255,255,255,0.08);
+  --text:#F0F0FF; --text2:#A0A0C0; --text3:#6060A0;
+  --gst:#10B981; --tds:#6366F1; --pf:#F59E0B; --pt:#EC4899;
+  --esic:#14B8A6; --it:#F97316; --mca:#8B5CF6; --fcra:#06B6D4; --sebi:#A78BFA;
+  --shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+body.light {
+  --dark:#F5F5FF; --dark2:#EEEEFF; --dark3:#E8E8FF;
+  --card:#FFFFFF; --card2:#F0F0FA; --border:rgba(0,0,0,0.1);
+  --text:#1A1A2E; --text2:#4A4A6A; --text3:#8A8AAA;
+  --shadow:0 4px 20px rgba(0,0,0,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--dark2)}
+::-webkit-scrollbar-thumb{background:var(--secondary);border-radius:3px}
+
+/* LAYOUT */
+.app-layout{display:flex;min-height:100vh;}
+.sidebar{width:256px;min-width:256px;background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;height:100vh;z-index:100;overflow-y:auto;transition:transform 0.3s;}
+.main-content{margin-left:256px;flex:1;min-height:100vh;}
+
+/* BRAND */
+.brand{padding:20px 18px 14px;border-bottom:1px solid var(--border);}
+.brand-logo{width:42px;height:42px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:9px;box-shadow:0 4px 14px rgba(255,107,53,0.35);}
+.brand-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--text);line-height:1.25;}
+.brand-tagline{font-size:9.5px;color:var(--text3);margin-top:2px;letter-spacing:.6px;text-transform:uppercase;}
+
+/* NAV */
+.nav-section{padding:10px 10px;}
+.nav-label{font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);padding:7px 8px 3px;font-weight:700;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:1px;font-size:13px;color:var(--text2);font-weight:500;border:1px solid transparent;}
+.nav-item:hover{background:rgba(255,107,53,0.09);color:var(--text);}
+.nav-item.active{background:linear-gradient(135deg,rgba(255,107,53,0.18),rgba(124,58,237,0.18));color:var(--primary);border-color:rgba(255,107,53,0.18);}
+.nav-icon{width:27px;height:27px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,0.06);flex-shrink:0;}
+.nav-item.active .nav-icon{background:var(--primary);}
+.nav-badge{margin-left:auto;background:var(--accent3);color:#fff;font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700;}
+
+/* SIDEBAR PROFILE */
+.sidebar-profile{margin:auto 10px 10px;background:var(--card);border-radius:11px;padding:11px 12px;border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.sidebar-profile:hover{border-color:var(--primary);}
+.profile-entity-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.profile-name{font-size:12.5px;font-weight:700;color:var(--text);}
+.profile-pan{font-size:10.5px;color:var(--text2);margin-top:1px;}
+
+/* TOPBAR */
+.topbar{background:var(--dark2);border-bottom:1px solid var(--border);padding:11px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:19px;font-weight:800;color:var(--text);}
+.topbar-subtitle{font-size:11.5px;color:var(--text2);margin-top:1px;}
+.fy-badge{background:linear-gradient(135deg,var(--secondary),var(--primary));color:#fff;padding:5px 13px;border-radius:20px;font-size:11.5px;font-weight:700;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+
+/* BUTTONS */
+.btn{padding:7px 15px;border-radius:8px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600;font-size:12.5px;transition:all .2s;display:flex;align-items:center;gap:5px;}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,107,53,.4);}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary);}
+.btn-ghost{background:transparent;color:var(--text2);}
+.btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.05);}
+.btn-danger{background:rgba(239,68,68,.14);color:var(--accent3);border:1px solid rgba(239,68,68,.28);}
+.btn-danger:hover{background:rgba(239,68,68,.22);}
+.btn-success{background:rgba(16,185,129,.14);color:var(--accent);border:1px solid rgba(16,185,129,.28);}
+.btn-success:hover{background:rgba(16,185,129,.22);}
+.btn-gcal{background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;}
+.btn-gcal:hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(66,133,244,.4);}
+.btn-sm{padding:4px 11px;font-size:11.5px;}
+
+/* PAGE */
+.page{padding:22px 26px;}
+
+/* CARDS */
+.card{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:18px 20px;box-shadow:var(--shadow);}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;}
+.card-title{font-size:14.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;}
+.card-subtitle{font-size:11.5px;color:var(--text2);margin-top:2px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px;}
+
+/* SECTION GRIDS */
+.section-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:20px;}
+
+/* CALENDAR */
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day-header{text-align:center;font-size:10.5px;font-weight:700;color:var(--text3);padding:5px 0;text-transform:uppercase;}
+.cal-day{min-height:86px;background:var(--card2);border-radius:9px;padding:5px;border:1px solid transparent;transition:all .2s;cursor:pointer;position:relative;}
+.cal-day:hover{border-color:var(--primary);}
+.cal-day.today{border-color:var(--primary);background:rgba(255,107,53,.07);}
+.cal-day.today .day-num{background:var(--primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.cal-day.other-month{opacity:.28;}
+.day-num{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:3px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.cal-event{font-size:8.5px;padding:2px 4px;border-radius:3px;margin-bottom:2px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
+.cal-more{font-size:8.5px;color:var(--text2);padding:1px 3px;}
+
+/* TASK ITEMS */
+.task-item{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border-radius:11px;background:var(--card2);margin-bottom:7px;border:1px solid var(--border);transition:all .2s;cursor:pointer;}
+.task-item:hover{border-color:rgba(255,255,255,.14);}
+.task-item.done{opacity:.55;}
+.task-checkbox{width:17px;height:17px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s;}
+.task-checkbox.checked{background:var(--accent);border-color:var(--accent);}
+.task-name{font-size:12.5px;font-weight:600;color:var(--text);}
+.task-meta{font-size:10.5px;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.due-badge{font-size:9.5px;padding:2px 7px;border-radius:9px;font-weight:700;white-space:nowrap;}
+.due-overdue{background:rgba(239,68,68,.2);color:var(--accent3);}
+.due-today{background:rgba(245,158,11,.2);color:var(--accent2);}
+.due-soon{background:rgba(16,185,129,.14);color:var(--accent);}
+.due-upcoming{background:rgba(255,255,255,.06);color:var(--text2);}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+input,select,textarea{background:var(--dark2);border:1px solid var(--border);color:var(--text);padding:9px 13px;border-radius:9px;font-family:'Outfit',sans-serif;font-size:12.5px;transition:all .2s;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);background:rgba(255,107,53,.04);}
+select option{background:var(--dark2);}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--dark2);padding:3px;border-radius:11px;margin-bottom:18px;}
+.tab{padding:7px 15px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text2);transition:all .2s;}
+.tab.active{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+.tab:hover:not(.active){color:var(--text);background:rgba(255,255,255,.05);}
+
+/* PROGRESS */
+.progress-bar{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+
+/* ALERTS */
+.alert{padding:11px 15px;border-radius:9px;font-size:12.5px;margin-bottom:11px;display:flex;align-items:flex-start;gap:9px;}
+.alert-warning{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--accent2);}
+.alert-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--accent3);}
+.alert-info{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);color:#818CF8;}
+.alert-success{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:var(--accent);}
+
+/* ENTITY GRID */
+.entity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+.entity-card{padding:14px;border-radius:13px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:all .2s;background:var(--card2);}
+.entity-card:hover{border-color:var(--primary);transform:translateY(-2px);}
+.entity-card.selected{border-color:var(--primary);background:rgba(255,107,53,.08);}
+.entity-icon{font-size:26px;margin-bottom:7px;}
+.entity-name{font-size:11.5px;font-weight:700;color:var(--text);}
+.entity-desc{font-size:9.5px;color:var(--text2);margin-top:3px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--dark2);border:1px solid var(--border);border-radius:19px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:18px 22px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;position:sticky;top:0;background:var(--dark2);z-index:1;}
+.modal-title{font-size:17px;font-weight:800;}
+.modal-body{padding:18px 22px;}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:9px;}
+.close-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.close-btn:hover{background:rgba(255,255,255,.08);color:var(--text);}
+
+/* CAT LABEL */
+.cat-label{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:5px;font-size:10.5px;font-weight:700;}
+
+/* FILTER */
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.filter-pill{padding:4px 13px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text2);transition:all .2s;}
+.filter-pill.active{border-color:var(--primary);color:var(--primary);background:rgba(255,107,53,.1);}
+.filter-pill:hover:not(.active){border-color:rgba(255,255,255,.18);color:var(--text);}
+
+/* MONTH NAV */
+.month-nav{display:flex;align-items:center;gap:10px;}
+.month-nav-btn{background:var(--card2);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;}
+.month-nav-btn:hover{border-color:var(--primary);color:var(--primary);}
+.month-name{font-size:16px;font-weight:800;min-width:170px;text-align:center;}
+
+/* SEARCH */
+.search-bar{position:relative;}
+.search-bar input{padding-left:34px;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed var(--border);border-radius:13px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;}
+.drop-zone:hover{border-color:var(--primary);background:rgba(255,107,53,.04);}
+
+/* SUMMARY ROW */
+.summary-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.summary-row:last-child{border-bottom:none;}
+
+/* ONBOARDING */
+.onboard-hero{text-align:center;padding:50px 36px 24px;}
+.onboard-logo{width:76px;height:76px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 18px;box-shadow:0 8px 28px rgba(255,107,53,.4);}
+.onboard-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:800;margin-bottom:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.onboard-sub{font-size:14px;color:var(--text2);max-width:460px;margin:0 auto 28px;line-height:1.65;}
+
+/* PASSWORD PAGE */
+.pwd-card{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;margin-bottom:14px;}
+.pwd-header{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.pwd-body{padding:14px 16px;}
+.pwd-field{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.pwd-field:last-child{border-bottom:none;}
+.pwd-label{font-size:10.5px;color:var(--text3);font-weight:600;text-transform:uppercase;min-width:70px;}
+.pwd-val{font-size:12.5px;color:var(--text);font-weight:600;flex:1;font-family:monospace;letter-spacing:.3px;}
+.pwd-eye{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:3px 6px;border-radius:5px;transition:all .2s;}
+.pwd-eye:hover{color:var(--text);background:rgba(255,255,255,.07);}
+.copy-btn{background:rgba(255,255,255,.06);border:none;color:var(--text2);cursor:pointer;font-size:11px;padding:3px 8px;border-radius:5px;transition:all .2s;font-family:'Outfit',sans-serif;}
+.copy-btn:hover{background:rgba(255,107,53,.15);color:var(--primary);}
+
+/* THEME TOGGLE */
+.theme-toggle{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px;display:flex;gap:2px;cursor:pointer;}
+.theme-btn{width:28px;height:28px;border-radius:16px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;background:transparent;color:var(--text2);}
+.theme-btn.active{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+
+/* GRADIENT LINE */
+.gradient-line{height:3px;background:linear-gradient(90deg,var(--primary),var(--secondary),var(--accent));border-radius:2px;}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:14px 0;}
+
+/* PENALTY BOX */
+.penalty-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:9px;padding:9px 13px;font-size:11.5px;color:#FCA5A5;}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.fade-in{animation:fadeIn .28s ease;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .main-content{margin-left:0;}
+  .form-grid{grid-template-columns:1fr;}
+  .section-grid{grid-template-columns:1fr;}
+  .entity-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, useRef } = React;
+
+// ─── STORAGE VERSION (bump this to force reset old cached data) ────────────
+const STORAGE_VERSION = '3';
+
+function savePersist(key, val) {
+  try { localStorage.setItem('vtcp3_' + key, JSON.stringify(val)); } catch(e) {}
+}
+function loadPersist(key, def) {
+  try {
+    const v = localStorage.getItem('vtcp3_' + key);
+    return v !== null ? JSON.parse(v) : def;
+  } catch(e) { return def; }
+}
+
+// ─── STATIC DATA ────────────────────────────────────────────────────────────
+
+const ENTITY_TYPES = [
+  { id:'sole', name:'Sole Proprietor', icon:'👤', desc:'Individual / Proprietorship', color:'#FF6B35' },
+  { id:'llp',  name:'LLP',             icon:'🤝', desc:'Limited Liability Partnership', color:'#7C3AED' },
+  { id:'firm', name:'Partnership Firm',icon:'🏢', desc:'General Partnership Firm',   color:'#10B981' },
+  { id:'pvt',  name:'Private Limited', icon:'🏭', desc:'Private Limited Company',     color:'#6366F1' },
+  { id:'pub',  name:'Public Limited',  icon:'🏦', desc:'Public Limited Company',      color:'#F59E0B' },
+  { id:'sec8', name:'Section 8 / Trust',icon:'🌿',desc:'Non-Profit / NGO / Trust',   color:'#14B8A6' },
+];
+
+const COMP_CATEGORIES = [
+  { id:'gst',  label:'GST',       color:'#10B981', bg:'rgba(16,185,129,.15)' },
+  { id:'tds',  label:'TDS/TCS',   color:'#6366F1', bg:'rgba(99,102,241,.15)' },
+  { id:'pf',   label:'EPF/PF',    color:'#F59E0B', bg:'rgba(245,158,11,.15)' },
+  { id:'pt',   label:'Prof. Tax', color:'#EC4899', bg:'rgba(236,72,153,.15)' },
+  { id:'esic', label:'ESIC',      color:'#14B8A6', bg:'rgba(20,184,166,.15)' },
+  { id:'it',   label:'Adv. Tax',  color:'#F97316', bg:'rgba(249,115,22,.15)' },
+  { id:'mca',  label:'MCA/ROC',   color:'#8B5CF6', bg:'rgba(139,92,246,.15)' },
+  { id:'itr',  label:'ITR',       color:'#EF4444', bg:'rgba(239,68,68,.15)' },
+  { id:'fcra', label:'FCRA',      color:'#06B6D4', bg:'rgba(6,182,212,.15)' },
+  { id:'sebi', label:'SEBI/Listed',color:'#A78BFA',bg:'rgba(167,139,250,.15)' },
+];
+
+const TILE_META = {
+  gst:  { icon:'🧾', grad:'linear-gradient(135deg,#059669,#10B981)', forms:'GSTR-1 · GSTR-3B · GSTR-9',     penalty:'₹50/day + 18% interest' },
+  tds:  { icon:'🏛️', grad:'linear-gradient(135deg,#4338CA,#6366F1)', forms:'24Q · 26Q · 27Q · 27EQ',        penalty:'₹200/day late return' },
+  pf:   { icon:'🏦', grad:'linear-gradient(135deg,#B45309,#F59E0B)', forms:'ECR Monthly · 3A/6A Annual',     penalty:'12% p.a. + 25% damages' },
+  pt:   { icon:'🗂️', grad:'linear-gradient(135deg,#9D174D,#EC4899)', forms:'PT Challan · PT Return',         penalty:'State-specific penalties' },
+  esic: { icon:'🏥', grad:'linear-gradient(135deg,#0F766E,#14B8A6)', forms:'ESIC Challan · H1/H2 Return',    penalty:'12% p.a. + 25% damages' },
+  it:   { icon:'💰', grad:'linear-gradient(135deg,#C2410C,#F97316)', forms:'Challan 280 (Q1–Q4)',             penalty:'1%/month u/s 234B/234C' },
+  mca:  { icon:'🏢', grad:'linear-gradient(135deg,#6D28D9,#8B5CF6)', forms:'MGT-7 · AOC-4 · DPT-3 · DIR-3', penalty:'₹100/day extra fee' },
+  itr:  { icon:'📑', grad:'linear-gradient(135deg,#B91C1C,#EF4444)', forms:'ITR-1/2/3/4/5/6/7 · 3CD',       penalty:'₹1,000–₹5,000 u/s 234F' },
+  fcra: { icon:'🌐', grad:'linear-gradient(135deg,#0369A1,#06B6D4)', forms:'FC-4 · FC-6D · FC-3C',           penalty:'FCRA registration cancelled' },
+  sebi: { icon:'📈', grad:'linear-gradient(135deg,#5B21B6,#A78BFA)', forms:'LODR Quarterly · SAST',          penalty:'SEBI penalties applicable' },
+};
+
+const PORTAL_DEFAULTS = [
+  { id:'p1',  cat:'gst',  name:'GST Portal',         url:'https://gst.gov.in',           loginId:'', password:'' },
+  { id:'p2',  cat:'itr',  name:'Income Tax e-Filing', url:'https://incometax.gov.in',    loginId:'', password:'' },
+  { id:'p3',  cat:'tds',  name:'TRACES',              url:'https://tdscpc.gov.in',        loginId:'', password:'' },
+  { id:'p4',  cat:'pf',   name:'EPFO Unified Portal', url:'https://unifiedportal-mem.epfindia.gov.in', loginId:'', password:'' },
+  { id:'p5',  cat:'esic', name:'ESIC Portal',         url:'https://esic.gov.in',          loginId:'', password:'' },
+  { id:'p6',  cat:'mca',  name:'MCA21 Portal',        url:'https://mca.gov.in',           loginId:'', password:'' },
+  { id:'p7',  cat:'fcra', name:'FCRA Online',         url:'https://fcraonline.nic.in',    loginId:'', password:'' },
+  { id:'p8',  cat:'mca',  name:'DGFT (IEC)',          url:'https://dgft.gov.in',          loginId:'', password:'' },
+  { id:'p9',  cat:'itr',  name:'TIN-NSDL (Challan)',  url:'https://tin.tin.nsdl.com',     loginId:'', password:'' },
+  { id:'p10', cat:'sebi', name:'BSE / NSE Listing',   url:'https://bseindia.com',         loginId:'', password:'' },
+];
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+const DEFAULT_PROFILE = {
+  entityType:'pvt',
+  name:'Vipin Enterprises Pvt. Ltd.',
+  doi:'2018-04-15', state:'Maharashtra', bizType:'services',
+  pan:'AABCV1234M', tan:'MUMV12345A', gstin:'27AABCV1234M1ZP',
+  cin:'U74999MH2018PTC123456',
+  pfno:'MH/BAN/123456/001', esicno:'41-00-123456-000-0001',
+  ptno:'MH-PT-RC-123456', ptec:'MH-PT-EC-654321',
+  udyam:'UDYAM-MH-18-0012345',
+  // Consultant contacts
+  gstConsultant:{ name:'CA Ramesh Sharma', mobile:'9820012345', email:'ramesh@taxconsult.in' },
+  tdsConsultant:{ name:'CA Priya Iyer',    mobile:'9821034567', email:'priya@iyer.tax' },
+  pfConsultant: { name:'HR Advisors LLP',  mobile:'9822056789', email:'hr@advisors.in' },
+  esicConsultant:{ name:'Compliance House', mobile:'9823078901', email:'esic@complhouse.in' },
+  mcaConsultant: { name:'CS Anita Mehta',  mobile:'9824090123', email:'anita@csmehta.in' },
+  hasGST:true, hasTDS:true, hasPF:true, hasESIC:true, hasPT:true, hasAdvTax:true, hasMCA:true, hasFCRA:false, isSEBI:false,
+};
+
+// ─── COMPLIANCE DATA ─────────────────────────────────────────────────────────
+
+function generateCompliances(entityType) {
+  const all = [
+    // GST - FY 2025-26
+    ...(['apr','may','jun','jul','aug','sep','oct','nov','dec'].map((m,i) => [
+      { id:`gst-gstr1-${m}`, cat:'gst', name:`GSTR-1 (${m.charAt(0).toUpperCase()+m.slice(1)} 2025)`, form:'GSTR-1', due:`2025-${String(i+5).padStart(2,'0')}-11`, entities:['sole','llp','firm','pvt','pub','sec8'], period:`${m.charAt(0).toUpperCase()+m.slice(1)} 2025`, penaltyInfo:'₹200/day (₹100 CGST + ₹100 SGST)', desc:'Monthly outward supply return', fy:'2025-26' },
+      { id:`gst-gstr3b-${m}`, cat:'gst', name:`GSTR-3B (${m.charAt(0).toUpperCase()+m.slice(1)} 2025)`, form:'GSTR-3B', due:`2025-${String(i+5).padStart(2,'0')}-20`, entities:['sole','llp','firm','pvt','pub','sec8'], period:`${m.charAt(0).toUpperCase()+m.slice(1)} 2025`, penaltyInfo:'₹50/day + 18% interest', desc:'Monthly summary GST return', fy:'2025-26' },
+    ])).flat(),
+    { id:'gst-gstr1-jan26', cat:'gst', name:'GSTR-1 (Jan 2026)', form:'GSTR-1', due:'2026-02-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Jan 2026', fy:'2025-26' },
+    { id:'gst-gstr3b-jan26', cat:'gst', name:'GSTR-3B (Jan 2026)', form:'GSTR-3B', due:'2026-02-20', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Jan 2026', fy:'2025-26' },
+    { id:'gst-gstr1-feb26', cat:'gst', name:'GSTR-1 (Feb 2026)', form:'GSTR-1', due:'2026-03-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Feb 2026', fy:'2025-26' },
+    { id:'gst-gstr3b-feb26', cat:'gst', name:'GSTR-3B (Feb 2026)', form:'GSTR-3B', due:'2026-03-20', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Feb 2026', fy:'2025-26' },
+    { id:'gst-gstr1-mar26', cat:'gst', name:'GSTR-1 (Mar 2026)', form:'GSTR-1', due:'2026-04-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Mar 2026', fy:'2025-26' },
+    { id:'gst-gstr3b-mar26', cat:'gst', name:'GSTR-3B (Mar 2026)', form:'GSTR-3B', due:'2026-04-20', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Mar 2026', fy:'2025-26' },
+    { id:'gst-gstr9-2425', cat:'gst', name:'GSTR-9 Annual Return (FY 2024-25)', form:'GSTR-9', due:'2025-12-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'FY 2024-25', penaltyInfo:'₹200/day max 0.5% of turnover', fy:'2025-26' },
+    { id:'gst-gstr9c-2425', cat:'gst', name:'GSTR-9C Reconciliation (FY 2024-25)', form:'GSTR-9C', due:'2025-12-31', entities:['sole','llp','firm','pvt','pub'], period:'FY 2024-25', fy:'2025-26' },
+
+    // GST - FY 2026-27 (Apr 2026 – Mar 2027)
+    ...(['apr','may','jun','jul','aug','sep','oct','nov','dec'].map((m,i) => [
+      { id:`gst-gstr1-${m}26`, cat:'gst', name:`GSTR-1 (${m.charAt(0).toUpperCase()+m.slice(1)} 2026)`, form:'GSTR-1', due:`2026-${String(i+5).padStart(2,'0')}-11`, entities:['sole','llp','firm','pvt','pub','sec8'], period:`${m.charAt(0).toUpperCase()+m.slice(1)} 2026`, fy:'2026-27' },
+      { id:`gst-gstr3b-${m}26`, cat:'gst', name:`GSTR-3B (${m.charAt(0).toUpperCase()+m.slice(1)} 2026)`, form:'GSTR-3B', due:`2026-${String(i+5).padStart(2,'0')}-20`, entities:['sole','llp','firm','pvt','pub','sec8'], period:`${m.charAt(0).toUpperCase()+m.slice(1)} 2026`, fy:'2026-27' },
+    ])).flat(),
+    { id:'gst-gstr1-jan27', cat:'gst', name:'GSTR-1 (Jan 2027)', form:'GSTR-1', due:'2027-02-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Jan 2027', fy:'2026-27' },
+    { id:'gst-gstr3b-jan27', cat:'gst', name:'GSTR-3B (Jan 2027)', form:'GSTR-3B', due:'2027-02-20', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Jan 2027', fy:'2026-27' },
+    { id:'gst-gstr1-feb27', cat:'gst', name:'GSTR-1 (Feb 2027)', form:'GSTR-1', due:'2027-03-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Feb 2027', fy:'2026-27' },
+    { id:'gst-gstr3b-feb27', cat:'gst', name:'GSTR-3B (Feb 2027)', form:'GSTR-3B', due:'2027-03-20', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Feb 2027', fy:'2026-27' },
+    { id:'gst-gstr1-mar27', cat:'gst', name:'GSTR-1 (Mar 2027)', form:'GSTR-1', due:'2027-04-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Mar 2027', fy:'2026-27' },
+    { id:'gst-gstr3b-mar27', cat:'gst', name:'GSTR-3B (Mar 2027)', form:'GSTR-3B', due:'2027-04-20', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Mar 2027', fy:'2026-27' },
+    { id:'gst-gstr9-2526', cat:'gst', name:'GSTR-9 Annual Return (FY 2025-26)', form:'GSTR-9', due:'2026-12-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'FY 2025-26', fy:'2026-27' },
+
+    // TDS - FY 2025-26
+    ...(['apr','may','jun','jul','aug','sep','oct','nov','dec'].map((m,i) => ({ id:`tds-pay-${m}`, cat:'tds', name:`TDS Payment (${m.charAt(0).toUpperCase()+m.slice(1)} 2025)`, form:'Challan 281', due:`2025-${String(i+5).padStart(2,'0')}-07`, entities:['sole','llp','firm','pvt','pub','sec8'], period:`${m.charAt(0).toUpperCase()+m.slice(1)} 2025`, penaltyInfo:'1.5%/month u/s 201', fy:'2025-26' }))),
+    { id:'tds-pay-jan26', cat:'tds', name:'TDS Payment (Jan 2026)', form:'Challan 281', due:'2026-02-07', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Jan 2026', fy:'2025-26' },
+    { id:'tds-pay-feb26', cat:'tds', name:'TDS Payment (Feb 2026)', form:'Challan 281', due:'2026-03-07', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Feb 2026', fy:'2025-26' },
+    { id:'tds-pay-mar26', cat:'tds', name:'TDS Payment (Mar 2026)', form:'Challan 281', due:'2026-04-30', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Mar 2026', desc:'Extended to 30 Apr for March', fy:'2025-26' },
+    { id:'tds-q1-26q', cat:'tds', name:'TDS Return 26Q – Q1 (Apr–Jun)', form:'26Q', due:'2025-07-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q1 FY26', penaltyInfo:'₹200/day u/s 234E', fy:'2025-26' },
+    { id:'tds-q1-24q', cat:'tds', name:'TDS Return 24Q – Q1 (Apr–Jun)', form:'24Q', due:'2025-07-31', entities:['llp','firm','pvt','pub','sec8'], period:'Q1 FY26', fy:'2025-26' },
+    { id:'tds-q2-26q', cat:'tds', name:'TDS Return 26Q – Q2 (Jul–Sep)', form:'26Q', due:'2025-10-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q2 FY26', fy:'2025-26' },
+    { id:'tds-q2-24q', cat:'tds', name:'TDS Return 24Q – Q2 (Jul–Sep)', form:'24Q', due:'2025-10-31', entities:['llp','firm','pvt','pub','sec8'], period:'Q2 FY26', fy:'2025-26' },
+    { id:'tds-q3-26q', cat:'tds', name:'TDS Return 26Q – Q3 (Oct–Dec)', form:'26Q', due:'2026-01-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q3 FY26', fy:'2025-26' },
+    { id:'tds-q3-24q', cat:'tds', name:'TDS Return 24Q – Q3 (Oct–Dec)', form:'24Q', due:'2026-01-31', entities:['llp','firm','pvt','pub','sec8'], period:'Q3 FY26', fy:'2025-26' },
+    { id:'tds-q4-26q', cat:'tds', name:'TDS Return 26Q – Q4 (Jan–Mar)', form:'26Q', due:'2026-05-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q4 FY26', fy:'2025-26' },
+    { id:'tds-q4-24q', cat:'tds', name:'TDS Return 24Q – Q4 (Jan–Mar)', form:'24Q', due:'2026-05-31', entities:['llp','firm','pvt','pub','sec8'], period:'Q4 FY26', fy:'2025-26' },
+
+    // TDS FY 2026-27
+    { id:'tds-q1-26q-27', cat:'tds', name:'TDS Return 26Q – Q1 FY27 (Apr–Jun)', form:'26Q', due:'2026-07-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q1 FY27', fy:'2026-27' },
+    { id:'tds-q2-26q-27', cat:'tds', name:'TDS Return 26Q – Q2 FY27 (Jul–Sep)', form:'26Q', due:'2026-10-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q2 FY27', fy:'2026-27' },
+    { id:'tds-q3-26q-27', cat:'tds', name:'TDS Return 26Q – Q3 FY27 (Oct–Dec)', form:'26Q', due:'2027-01-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q3 FY27', fy:'2026-27' },
+    { id:'tds-q4-26q-27', cat:'tds', name:'TDS Return 26Q – Q4 FY27 (Jan–Mar)', form:'26Q', due:'2027-05-31', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q4 FY27', fy:'2026-27' },
+
+    // EPF FY 2025-26
+    ...(['apr','may','jun','jul','aug','sep','oct','nov','dec'].map((m,i) => ({ id:`pf-${m}`, cat:'pf', name:`PF Contribution (${m.charAt(0).toUpperCase()+m.slice(1)} 2025)`, form:'ECR', due:`2025-${String(i+5).padStart(2,'0')}-15`, entities:['sole','llp','firm','pvt','pub','sec8'], period:`${m.charAt(0).toUpperCase()+m.slice(1)} 2025`, penaltyInfo:'12% p.a. + damages 5–25%', fy:'2025-26' }))),
+    { id:'pf-jan26', cat:'pf', name:'PF Contribution (Jan 2026)', form:'ECR', due:'2026-02-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Jan 2026', fy:'2025-26' },
+    { id:'pf-feb26', cat:'pf', name:'PF Contribution (Feb 2026)', form:'ECR', due:'2026-03-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Feb 2026', fy:'2025-26' },
+    { id:'pf-mar26', cat:'pf', name:'PF Contribution (Mar 2026)', form:'ECR', due:'2026-04-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Mar 2026', fy:'2025-26' },
+    { id:'pf-annual-2526', cat:'pf', name:'EPF Annual Return (FY 2025-26)', form:'3A/6A', due:'2026-04-25', entities:['sole','llp','firm','pvt','pub','sec8'], period:'FY 2025-26', fy:'2025-26' },
+
+    // ESIC FY 2025-26
+    ...(['apr','may','jun','jul','aug','sep','oct','nov','dec'].map((m,i) => ({ id:`esic-${m}`, cat:'esic', name:`ESIC Contribution (${m.charAt(0).toUpperCase()+m.slice(1)} 2025)`, form:'ESIC Challan', due:`2025-${String(i+5).padStart(2,'0')}-15`, entities:['sole','llp','firm','pvt','pub','sec8'], period:`${m.charAt(0).toUpperCase()+m.slice(1)} 2025`, penaltyInfo:'12% p.a. + 25% damages', fy:'2025-26' }))),
+    { id:'esic-jan26', cat:'esic', name:'ESIC Contribution (Jan 2026)', form:'ESIC Challan', due:'2026-02-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Jan 2026', fy:'2025-26' },
+    { id:'esic-feb26', cat:'esic', name:'ESIC Contribution (Feb 2026)', form:'ESIC Challan', due:'2026-03-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Feb 2026', fy:'2025-26' },
+    { id:'esic-mar26', cat:'esic', name:'ESIC Contribution (Mar 2026)', form:'ESIC Challan', due:'2026-04-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Mar 2026', fy:'2025-26' },
+    { id:'esic-h1-ret', cat:'esic', name:'ESIC Half-Yearly Return (H1: Apr–Sep)', form:'ESIC Return', due:'2025-11-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'H1 FY26', fy:'2025-26' },
+    { id:'esic-h2-ret', cat:'esic', name:'ESIC Half-Yearly Return (H2: Oct–Mar)', form:'ESIC Return', due:'2026-05-11', entities:['sole','llp','firm','pvt','pub','sec8'], period:'H2 FY26', fy:'2025-26' },
+
+    // Professional Tax
+    { id:'pt-emp-annual', cat:'pt', name:'Prof. Tax Employer Enrollment (Annual)', form:'PT Enrollment', due:'2025-06-30', entities:['sole','llp','firm','pvt','pub','sec8'], period:'FY 2025-26', penaltyInfo:'State-specific penalties apply', fy:'2025-26' },
+    { id:'pt-annual-ret', cat:'pt', name:'Prof. Tax Annual Return (FY 2025-26)', form:'PT Annual Return', due:'2026-03-31', entities:['llp','firm','pvt','pub','sec8'], period:'FY 2025-26', fy:'2025-26' },
+    { id:'pt-emp-annual-27', cat:'pt', name:'Prof. Tax Employer Enrollment FY 2026-27', form:'PT Enrollment', due:'2026-06-30', entities:['sole','llp','firm','pvt','pub','sec8'], period:'FY 2026-27', fy:'2026-27' },
+
+    // Advance Tax FY 2025-26
+    { id:'advtax-q1-26', cat:'it', name:'Advance Tax – Q1 15% (AY 2026-27)', form:'Challan 280', due:'2025-06-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q1 FY26', penaltyInfo:'1%/month u/s 234C', desc:'15% of estimated annual tax liability', fy:'2025-26' },
+    { id:'advtax-q2-26', cat:'it', name:'Advance Tax – Q2 45% (AY 2026-27)', form:'Challan 280', due:'2025-09-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q2 FY26', desc:'Cumulative 45% of tax liability', fy:'2025-26' },
+    { id:'advtax-q3-26', cat:'it', name:'Advance Tax – Q3 75% (AY 2026-27)', form:'Challan 280', due:'2025-12-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q3 FY26', desc:'Cumulative 75% of tax liability', fy:'2025-26' },
+    { id:'advtax-q4-26', cat:'it', name:'Advance Tax – Q4 100% (AY 2026-27)', form:'Challan 280', due:'2026-03-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q4 FY26', desc:'Full 100% payment', penaltyInfo:'1%/month u/s 234B after 31 Mar', fy:'2025-26' },
+
+    // Advance Tax FY 2026-27
+    { id:'advtax-q1-27', cat:'it', name:'Advance Tax – Q1 15% (AY 2027-28)', form:'Challan 280', due:'2026-06-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q1 FY27', fy:'2026-27' },
+    { id:'advtax-q2-27', cat:'it', name:'Advance Tax – Q2 45% (AY 2027-28)', form:'Challan 280', due:'2026-09-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q2 FY27', fy:'2026-27' },
+    { id:'advtax-q3-27', cat:'it', name:'Advance Tax – Q3 75% (AY 2027-28)', form:'Challan 280', due:'2026-12-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q3 FY27', fy:'2026-27' },
+    { id:'advtax-q4-27', cat:'it', name:'Advance Tax – Q4 100% (AY 2027-28)', form:'Challan 280', due:'2027-03-15', entities:['sole','llp','firm','pvt','pub','sec8'], period:'Q4 FY27', fy:'2026-27' },
+
+    // ITR
+    { id:'itr-1-2-ay26', cat:'itr', name:'ITR-1/ITR-2 (AY 2025-26)', form:'ITR-1/2', due:'2025-07-31', entities:['sole'], period:'AY 2025-26', penaltyInfo:'₹1,000–₹5,000 u/s 234F', fy:'2025-26' },
+    { id:'itr-3-4-ay26', cat:'itr', name:'ITR-3/ITR-4 (AY 2025-26)', form:'ITR-3/4', due:'2025-07-31', entities:['sole'], period:'AY 2025-26', fy:'2025-26' },
+    { id:'itr-5-ay26',   cat:'itr', name:'ITR-5 LLP/Firm (AY 2025-26)', form:'ITR-5', due:'2025-07-31', entities:['llp','firm'], period:'AY 2025-26', fy:'2025-26' },
+    { id:'itr-6-ay26',   cat:'itr', name:'ITR-6 Companies (AY 2025-26)', form:'ITR-6', due:'2025-10-31', entities:['pvt','pub'], period:'AY 2025-26', fy:'2025-26' },
+    { id:'itr-7-ay26',   cat:'itr', name:'ITR-7 Sec 8/Trust (AY 2025-26)', form:'ITR-7', due:'2025-10-31', entities:['sec8'], period:'AY 2025-26', fy:'2025-26' },
+    { id:'taxaudit-ay26',cat:'itr', name:'Tax Audit Report 3CB/3CD (AY 2025-26)', form:'3CB/3CD', due:'2025-09-30', entities:['sole','llp','firm','pvt','pub'], period:'AY 2025-26', penaltyInfo:'₹1.5L or 0.5% of turnover', fy:'2025-26' },
+    { id:'itr-1-2-ay27', cat:'itr', name:'ITR-1/ITR-2 (AY 2026-27)', form:'ITR-1/2', due:'2026-07-31', entities:['sole'], period:'AY 2026-27', fy:'2026-27' },
+    { id:'itr-6-ay27',   cat:'itr', name:'ITR-6 Companies (AY 2026-27)', form:'ITR-6', due:'2026-10-31', entities:['pvt','pub'], period:'AY 2026-27', fy:'2026-27' },
+    { id:'itr-7-ay27',   cat:'itr', name:'ITR-7 Sec 8/Trust (AY 2026-27)', form:'ITR-7', due:'2026-10-31', entities:['sec8'], period:'AY 2026-27', fy:'2026-27' },
+    { id:'taxaudit-ay27',cat:'itr', name:'Tax Audit Report 3CB/3CD (AY 2026-27)', form:'3CB/3CD', due:'2026-09-30', entities:['sole','llp','firm','pvt','pub'], period:'AY 2026-27', fy:'2026-27' },
+
+    // MCA/ROC
+    { id:'mca-llp11',  cat:'mca', name:'LLP Form 11 – Annual Return (FY 2024-25)', form:'Form 11', due:'2025-05-30', entities:['llp'], period:'FY 2024-25', penaltyInfo:'₹100/day additional fee', fy:'2025-26' },
+    { id:'mca-llp8',   cat:'mca', name:'LLP Form 8 – Statement of Accounts (FY 2024-25)', form:'Form 8', due:'2025-10-30', entities:['llp'], period:'FY 2024-25', penaltyInfo:'₹100/day additional fee', fy:'2025-26' },
+    { id:'mca-mgt7',   cat:'mca', name:'MGT-7/MGT-7A – Annual Return', form:'MGT-7', due:'2025-11-28', entities:['pvt','pub'], period:'FY 2024-25', penaltyInfo:'₹100/day additional fee', desc:'60 days from AGM date', fy:'2025-26' },
+    { id:'mca-aoc4',   cat:'mca', name:'AOC-4 – Financial Statements', form:'AOC-4', due:'2025-10-30', entities:['pvt','pub'], period:'FY 2024-25', penaltyInfo:'₹100/day + penalty on officers', fy:'2025-26' },
+    { id:'mca-dir3kyc',cat:'mca', name:'DIR-3 KYC – Director KYC', form:'DIR-3 KYC', due:'2025-09-30', entities:['pvt','pub','sec8'], period:'FY 2025-26', penaltyInfo:'₹5000 penalty; DIN deactivated', fy:'2025-26' },
+    { id:'mca-dpt3',   cat:'mca', name:'DPT-3 – Return of Deposits', form:'DPT-3', due:'2025-06-30', entities:['pvt','pub'], period:'FY 2024-25', fy:'2025-26' },
+    { id:'mca-msme1-h1',cat:'mca',name:'MSME-1 – Vendor Dues H1 (Apr–Sep)', form:'MSME-1', due:'2025-10-31', entities:['pvt','pub'], period:'H1 FY26', fy:'2025-26' },
+    { id:'mca-msme1-h2',cat:'mca',name:'MSME-1 – Vendor Dues H2 (Oct–Mar)', form:'MSME-1', due:'2026-04-30', entities:['pvt','pub'], period:'H2 FY26', fy:'2025-26' },
+    { id:'mca-csr2',   cat:'mca', name:'CSR-2 – CSR Annual Report', form:'CSR-2', due:'2025-12-31', entities:['pvt','pub'], period:'FY 2024-25', penaltyInfo:'Up to ₹3 Lakhs penalty', fy:'2025-26' },
+    { id:'mca-agm',    cat:'mca', name:'AGM – Annual General Meeting', form:'AGM', due:'2025-09-30', entities:['pvt','pub','sec8'], period:'FY 2024-25', fy:'2025-26' },
+    { id:'mca-adt1',   cat:'mca', name:'ADT-1 – Auditor Appointment', form:'ADT-1', due:'2025-10-15', entities:['pvt','pub','sec8'], period:'FY 2025-26', fy:'2025-26' },
+    { id:'mca-fla',    cat:'mca', name:'RBI – FLA Return (Foreign Liabilities)', form:'FLA Return', due:'2025-07-15', entities:['pvt','pub'], period:'FY 2024-25', fy:'2025-26' },
+    { id:'mca-llp11-27',cat:'mca',name:'LLP Form 11 – Annual Return (FY 2025-26)', form:'Form 11', due:'2026-05-30', entities:['llp'], period:'FY 2025-26', fy:'2026-27' },
+    { id:'mca-llp8-27', cat:'mca',name:'LLP Form 8 – Statement of Accounts (FY 2025-26)', form:'Form 8', due:'2026-10-30', entities:['llp'], period:'FY 2025-26', fy:'2026-27' },
+    { id:'mca-mgt7-27', cat:'mca',name:'MGT-7 – Annual Return (FY 2025-26)', form:'MGT-7', due:'2026-11-28', entities:['pvt','pub'], period:'FY 2025-26', fy:'2026-27' },
+    { id:'mca-aoc4-27', cat:'mca',name:'AOC-4 – Financial Statements (FY 2025-26)', form:'AOC-4', due:'2026-10-30', entities:['pvt','pub'], period:'FY 2025-26', fy:'2026-27' },
+    { id:'mca-dir3kyc-27',cat:'mca',name:'DIR-3 KYC – Director KYC FY 2026-27', form:'DIR-3 KYC', due:'2026-09-30', entities:['pvt','pub','sec8'], period:'FY 2026-27', fy:'2026-27' },
+
+    // FCRA (Sec 8)
+    { id:'fcra-fc4-2425', cat:'fcra', name:'FCRA Annual Return FC-4 (FY 2024-25)', form:'FC-4', due:'2025-12-31', entities:['sec8'], period:'FY 2024-25', penaltyInfo:'FCRA registration may be cancelled', fy:'2025-26' },
+    { id:'fcra-fc6d-q1', cat:'fcra', name:'FCRA FC-6D Quarterly Intimation Q1', form:'FC-6D', due:'2025-07-15', entities:['sec8'], period:'Q1 FY26', fy:'2025-26' },
+    { id:'fcra-fc6d-q2', cat:'fcra', name:'FCRA FC-6D Quarterly Intimation Q2', form:'FC-6D', due:'2025-10-15', entities:['sec8'], period:'Q2 FY26', fy:'2025-26' },
+    { id:'fcra-fc6d-q3', cat:'fcra', name:'FCRA FC-6D Quarterly Intimation Q3', form:'FC-6D', due:'2026-01-15', entities:['sec8'], period:'Q3 FY26', fy:'2025-26' },
+    { id:'fcra-darpan',  cat:'fcra', name:'DARPAN Registration Linking (Niti Aayog)', form:'DARPAN Portal', due:'2025-06-30', entities:['sec8'], period:'FY 2025-26', fy:'2025-26' },
+
+    // SEBI / Listed
+    { id:'sebi-lodr-q1', cat:'sebi', name:'SEBI LODR – Quarterly Report Q1', form:'BSE/NSE Filing', due:'2025-07-30', entities:['pub'], period:'Q1 FY26', fy:'2025-26' },
+    { id:'sebi-lodr-q2', cat:'sebi', name:'SEBI LODR – Quarterly Report Q2', form:'BSE/NSE Filing', due:'2025-10-30', entities:['pub'], period:'Q2 FY26', fy:'2025-26' },
+    { id:'sebi-lodr-q3', cat:'sebi', name:'SEBI LODR – Quarterly Report Q3', form:'BSE/NSE Filing', due:'2026-01-30', entities:['pub'], period:'Q3 FY26', fy:'2025-26' },
+    { id:'sebi-lodr-q4', cat:'sebi', name:'SEBI LODR – Quarterly Report Q4', form:'BSE/NSE Filing', due:'2026-04-30', entities:['pub'], period:'Q4 FY26', fy:'2025-26' },
+    { id:'sebi-annrep',  cat:'sebi', name:'SEBI Annual Report Submission', form:'BSE/NSE', due:'2025-10-15', entities:['pub'], period:'FY 2024-25', fy:'2025-26' },
+  ];
+
+  return all.filter(c => !entityType || c.entities.includes(entityType));
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+const today = () => new Date();
+
+function getDueDays(dueStr) {
+  const due = new Date(dueStr); const now = today();
+  now.setHours(0,0,0,0); due.setHours(0,0,0,0);
+  return Math.round((due - now) / 86400000);
+}
+function getDueStatus(dueStr) {
+  const d = getDueDays(dueStr);
+  if (d < 0) return 'overdue'; if (d === 0) return 'today'; if (d <= 7) return 'soon'; return 'upcoming';
+}
+function getCatInfo(catId) { return COMP_CATEGORIES.find(c => c.id === catId) || { label:catId, color:'#fff', bg:'rgba(255,255,255,.1)' }; }
+function formatDate(s) {
+  if (!s) return '—';
+  return new Date(s).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+function toGCalDate(s) {
+  if (!s) return '';
+  return s.replace(/-/g,'') + 'T000000Z';
+}
+function openGCal(task) {
+  const start = toGCalDate(task.due);
+  const end = toGCalDate(task.due);
+  const title = encodeURIComponent(`[Compliance] ${task.name}`);
+  const details = encodeURIComponent(`Form: ${task.form||''}\nPeriod: ${task.period||''}\nDue: ${formatDate(task.due)}\n${task.penaltyInfo ? 'Penalty: '+task.penaltyInfo : ''}`);
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
+  window.open(url, '_blank');
+}
+
+// ─── SMALL SHARED COMPONENTS ─────────────────────────────────────────────────
+
+function CategoryTag({ cat, size='sm' }) {
+  const c = getCatInfo(cat);
+  return <span className="cat-label" style={{ background:c.bg, color:c.color, fontSize:size==='xs'?9.5:11 }}>{c.label}</span>;
+}
+function DueBadge({ due }) {
+  const d = getDueDays(due); const s = getDueStatus(due);
+  const label = s==='overdue'?`${Math.abs(d)}d overdue`:s==='today'?'Due Today':s==='soon'?`${d}d left`:formatDate(due);
+  return <span className={`due-badge due-${s}`}>{label}</span>;
+}
+
+// ─── COMPLIANCE TILE ─────────────────────────────────────────────────────────
+
+function ComplianceTile({ cat, tasks, fy, onNavigate }) {
+  const meta = TILE_META[cat] || {};
+  const c = getCatInfo(cat);
+  const catTasks = tasks.filter(t => t.cat === cat && (!fy || t.fy === fy));
+  if (catTasks.length === 0) return null;
+  const done = catTasks.filter(t => t.status === 'done').length;
+  const overdue = catTasks.filter(t => t.status !== 'done' && getDueStatus(t.due) === 'overdue').length;
+  const pending = catTasks.length - done;
+  const pct = catTasks.length ? Math.round(done/catTasks.length*100) : 0;
+  const next = catTasks.filter(t => t.status !== 'done').sort((a,b) => new Date(a.due)-new Date(b.due))[0];
+  return (
+    <div onClick={() => onNavigate('tasks')} style={{ background:'var(--card)', borderRadius:18, border:'1px solid var(--border)', overflow:'hidden', cursor:'pointer', transition:'all .25s', boxShadow:'var(--shadow)' }}
+      onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.borderColor=c.color;e.currentTarget.style.boxShadow=`0 8px 28px ${c.color}30`;}}
+      onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='var(--shadow)';}}>
+      <div style={{ background:meta.grad, padding:'15px 17px 13px', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', right:-16, top:-16, width:74, height:74, borderRadius:'50%', background:'rgba(255,255,255,.1)' }}/>
+        <div style={{ position:'absolute', right:14, top:18, fontSize:30, opacity:.9 }}>{meta.icon}</div>
+        <div style={{ fontSize:9.5, fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'rgba(255,255,255,.7)', marginBottom:2 }}>Compliance</div>
+        <div style={{ fontSize:19, fontWeight:900, color:'#fff', lineHeight:1 }}>{c.label}</div>
+        <div style={{ fontSize:9.5, color:'rgba(255,255,255,.6)', marginTop:3 }}>{meta.forms}</div>
+      </div>
+      <div style={{ padding:'13px 16px 15px' }}>
+        <div style={{ display:'flex', gap:7, marginBottom:11 }}>
+          {[{n:overdue,l:'OVERDUE',col:overdue>0?'var(--accent3)':'var(--text)'},{n:pending,l:'PENDING',col:'var(--accent2)'},{n:done,l:'DONE',col:'var(--accent)'}].map(s=>(
+            <div key={s.l} style={{ flex:1, textAlign:'center', background:'rgba(255,255,255,.04)', borderRadius:9, padding:'7px 3px' }}>
+              <div style={{ fontSize:19, fontWeight:800, color:s.col }}>{s.n}</div>
+              <div style={{ fontSize:9, color:'var(--text3)', fontWeight:600, marginTop:1 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginBottom:9 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+            <span style={{ fontSize:10.5, color:'var(--text2)' }}>Progress</span>
+            <span style={{ fontSize:10.5, fontWeight:700, color:c.color }}>{pct}%</span>
+          </div>
+          <div style={{ height:5, background:'rgba(255,255,255,.07)', borderRadius:3, overflow:'hidden' }}>
+            <div style={{ height:'100%', width:`${pct}%`, background:meta.grad, borderRadius:3, transition:'width .5s ease' }}/>
+          </div>
+        </div>
+        {next ? (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(255,255,255,.04)', borderRadius:7, padding:'6px 9px' }}>
+            <div style={{ minWidth:0 }}>
+              <div style={{ fontSize:9.5, color:'var(--text3)', fontWeight:600, marginBottom:1 }}>NEXT DUE</div>
+              <div style={{ fontSize:10.5, color:'var(--text)', fontWeight:600, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:130 }}>{next.name.replace(/\(.*\)/,'').trim()}</div>
+            </div>
+            <DueBadge due={next.due} />
+          </div>
+        ) : (
+          <div style={{ textAlign:'center', fontSize:12, color:'var(--accent)', fontWeight:700, padding:'5px 0' }}>🎉 All Clear!</div>
+        )}
+        <div style={{ marginTop:7, fontSize:9.5, color:'var(--text3)', display:'flex', gap:3 }}><span>⚠️</span><span>{meta.penalty}</span></div>
+      </div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+
+function Dashboard({ profile, tasks, onNavigate }) {
+  const [fy, setFy] = useState('2025-26');
+  const entity = ENTITY_TYPES.find(e => e.id === profile.entityType);
+
+  const filtered = useMemo(() => tasks.filter(t => !t.fy || t.fy === fy), [tasks, fy]);
+  const stats = useMemo(() => {
+    const done = filtered.filter(t => t.status === 'done').length;
+    const overdue = filtered.filter(t => t.status !== 'done' && getDueStatus(t.due) === 'overdue').length;
+    const soon = filtered.filter(t => t.status !== 'done' && (getDueStatus(t.due) === 'today' || getDueStatus(t.due) === 'soon')).length;
+    return { done, overdue, soon, total:filtered.length, pending:filtered.length - done };
+  }, [filtered]);
+  const progress = stats.total ? Math.round(stats.done/stats.total*100) : 0;
+  const upcoming = useMemo(() => filtered.filter(t => t.status !== 'done').sort((a,b) => new Date(a.due)-new Date(b.due)).slice(0,5), [filtered]);
+  const activeCats = useMemo(() => COMP_CATEGORIES.filter(c => filtered.some(t => t.cat === c.id)), [filtered]);
+
+  return (
+    <div className="page fade-in">
+      {/* Top bar: entity card + stats */}
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'stretch', marginBottom:18 }}>
+        <div style={{ flex:1, minWidth:240, background:'var(--card)', borderRadius:14, border:'1px solid var(--border)', padding:'13px 17px', display:'flex', alignItems:'center', gap:13 }}>
+          <div style={{ width:42, height:42, borderRadius:11, background:'linear-gradient(135deg,var(--primary),var(--secondary))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>🏢</div>
+          <div style={{ minWidth:0 }}>
+            <div style={{ fontSize:14.5, fontWeight:800, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{profile.name || 'Your Business'}</div>
+            <div style={{ fontSize:11, color:'var(--text2)', marginTop:2 }}>{entity?.icon} {entity?.name} · {profile.state || 'India'}</div>
+            {profile.gstin && <div style={{ fontSize:9.5, color:'var(--text3)', marginTop:1, fontFamily:'monospace' }}>GST: {profile.gstin}</div>}
+          </div>
+        </div>
+        {[{n:stats.overdue,l:'Overdue',col:'var(--accent3)',bg:'rgba(239,68,68,.12)',i:'🚨'},{n:stats.soon,l:'Due This Week',col:'var(--accent2)',bg:'rgba(245,158,11,.12)',i:'⏰'},{n:stats.done,l:'Completed',col:'var(--accent)',bg:'rgba(16,185,129,.12)',i:'✅'},{n:stats.total,l:'Total Tasks',col:'#A78BFA',bg:'rgba(167,139,250,.12)',i:'📋'}].map(s=>(
+          <div key={s.l} style={{ minWidth:95, background:s.bg, borderRadius:14, border:`1px solid ${s.col}30`, padding:'11px 14px', textAlign:'center' }}>
+            <div style={{ fontSize:8.5, fontWeight:700, color:s.col, textTransform:'uppercase', letterSpacing:'.5px', marginBottom:3 }}>{s.i} {s.l}</div>
+            <div style={{ fontSize:24, fontWeight:900, color:s.col, lineHeight:1 }}>{s.n}</div>
+          </div>
+        ))}
+      </div>
+
+      {stats.overdue > 0 && (
+        <div className="alert alert-danger" style={{ marginBottom:16 }}>
+          <span>🚨</span>
+          <div><strong>{stats.overdue} compliance{stats.overdue>1?'s':''} overdue!</strong> Immediate attention required to avoid penalties.</div>
+          <button className="btn btn-danger btn-sm" style={{ marginLeft:'auto', flexShrink:0 }} onClick={()=>onNavigate('tasks')}>View →</button>
+        </div>
+      )}
+
+      {/* FY Selector + Section Header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+        <div style={{ fontSize:15, fontWeight:800, display:'flex', alignItems:'center', gap:7 }}>
+          <span style={{ background:'linear-gradient(135deg,var(--primary),var(--secondary))', borderRadius:7, width:26, height:26, display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>⚡</span>
+          Compliance Overview
+        </div>
+        <div style={{ display:'flex', gap:6 }}>
+          {['2025-26','2026-27'].map(f => (
+            <button key={f} onClick={()=>setFy(f)} style={{ padding:'5px 14px', borderRadius:20, border:`1px solid ${fy===f?'var(--primary)':'var(--border)'}`, background:fy===f?'rgba(255,107,53,.12)':'var(--card2)', color:fy===f?'var(--primary)':'var(--text2)', cursor:'pointer', fontSize:11.5, fontWeight:700, transition:'all .2s' }}>FY {f}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* TILES GRID */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(215px,1fr))', gap:14, marginBottom:22 }}>
+        {activeCats.map(c => <ComplianceTile key={c.id} cat={c.id} tasks={tasks} fy={fy} onNavigate={onNavigate} />)}
+      </div>
+
+      {/* Bottom row */}
+      <div className="section-grid">
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">⚡ Next 5 Deadlines</div>
+              <div className="card-subtitle">Sorted by earliest due date · FY {fy}</div>
+            </div>
+            <button className="btn btn-secondary btn-sm" onClick={()=>onNavigate('tasks')}>View All</button>
+          </div>
+          {upcoming.length === 0 ? (
+            <div style={{ textAlign:'center', color:'var(--text2)', padding:'26px 0', fontSize:13 }}>
+              <div style={{ fontSize:34, marginBottom:8 }}>🎉</div>All clear for FY {fy}!
+            </div>
+          ) : upcoming.map(t => {
+            const c = getCatInfo(t.cat);
+            return (
+              <div key={t.id} className="task-item" style={{ borderLeft:`3px solid ${c.color}` }} onClick={()=>onNavigate('tasks')}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:c.color, flexShrink:0, marginTop:5 }}/>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, flexWrap:'wrap' }}>
+                    <span className="task-name">{t.name}</span>
+                    <CategoryTag cat={t.cat} size="xs" />
+                  </div>
+                  <div className="task-meta"><span>📅 {formatDate(t.due)}</span>{t.form&&<span>· {t.form}</span>}</div>
+                </div>
+                <DueBadge due={t.due} />
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div className="card">
+            <div className="card-title" style={{ marginBottom:11 }}>📊 FY {fy} Progress</div>
+            <div style={{ position:'relative', width:90, height:90, margin:'0 auto 12px' }}>
+              <svg viewBox="0 0 36 36" style={{ transform:'rotate(-90deg)', width:90, height:90 }}>
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,.07)" strokeWidth="3"/>
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#pg)" strokeWidth="3"
+                  strokeDasharray={`${progress} ${100-progress}`} strokeLinecap="round"/>
+                <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FF6B35"/><stop offset="100%" stopColor="#7C3AED"/>
+                </linearGradient></defs>
+              </svg>
+              <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+                <div style={{ fontSize:18, fontWeight:900, background:'linear-gradient(135deg,var(--primary),var(--secondary))', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{progress}%</div>
+                <div style={{ fontSize:8.5, color:'var(--text3)', fontWeight:600 }}>DONE</div>
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7 }}>
+              {[{n:stats.done,l:'Completed',col:'var(--accent)',bg:'rgba(16,185,129,.1)'},{n:stats.pending,l:'Remaining',col:'var(--primary)',bg:'rgba(255,107,53,.1)'}].map(s=>(
+                <div key={s.l} style={{ background:s.bg, borderRadius:8, padding:'7px', textAlign:'center' }}>
+                  <div style={{ fontSize:17, fontWeight:800, color:s.col }}>{s.n}</div>
+                  <div style={{ fontSize:9.5, color:'var(--text3)' }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-title" style={{ marginBottom:11 }}>🚀 Quick Actions</div>
+            {[{l:'📅 Compliance Calendar',p:'calendar'},{l:'📋 All Tasks',p:'tasks'},{l:'🔑 Portal Passwords',p:'portals'},{l:'✏️ Edit Profile',p:'profile'},{l:'💾 Export Data',p:'data'}].map(a=>(
+              <button key={a.p} className="btn btn-secondary" style={{ justifyContent:'flex-start', fontSize:12, width:'100%', marginBottom:6 }} onClick={()=>onNavigate(a.p)}>{a.l}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CALENDAR ────────────────────────────────────────────────────────────────
+
+function CalendarView({ tasks, onUpdateTasks }) {
+  const [viewYear, setViewYear] = useState(() => today().getFullYear());
+  const [viewMonth, setViewMonth] = useState(() => today().getMonth());
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [catFilter, setCatFilter] = useState('all');
+  const [editTask, setEditTask] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  const prevMonth = () => { if (viewMonth===0){setViewYear(y=>y-1);setViewMonth(11);}else setViewMonth(m=>m-1); };
+  const nextMonth = () => { if (viewMonth===11){setViewYear(y=>y+1);setViewMonth(0);}else setViewMonth(m=>m+1); };
+
+  const tasksByDay = useMemo(() => {
+    const map = {};
+    tasks.filter(t => catFilter==='all' || t.cat===catFilter).forEach(t => {
+      if (!t.due) return;
+      const d = new Date(t.due);
+      if (d.getFullYear()===viewYear && d.getMonth()===viewMonth) {
+        const k = d.getDate(); if (!map[k]) map[k]=[];
+        map[k].push(t);
+      }
+    });
+    return map;
+  }, [tasks, viewYear, viewMonth, catFilter]);
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const prevDays = new Date(viewYear, viewMonth, 0).getDate();
+  const todayObj = today();
+  const cells = [];
+  for (let i=0;i<firstDay;i++) cells.push({day:prevDays-firstDay+i+1,other:true});
+  for (let i=1;i<=daysInMonth;i++) cells.push({day:i,other:false});
+  while (cells.length%7!==0) cells.push({day:cells.length-firstDay-daysInMonth+1,other:true});
+
+  const openEdit = (t) => { setEditTask(t); setEditForm({status:t.status, notes:t.notes||'', due:t.due}); };
+  const saveEdit = () => {
+    onUpdateTasks(tasks.map(t => t.id===editTask.id ? {...t, ...editForm} : t));
+    setEditTask(null);
+  };
+
+  const selectedTasks = selectedDay ? (tasksByDay[selectedDay]||[]) : [];
+
+  return (
+    <div className="page fade-in">
+      <div className="card" style={{ marginBottom:18 }}>
+        <div className="card-header">
+          <div className="month-nav">
+            <button className="month-nav-btn" onClick={prevMonth}>◀</button>
+            <div className="month-name">{MONTHS[viewMonth]} {viewYear}</div>
+            <button className="month-nav-btn" onClick={nextMonth}>▶</button>
+          </div>
+          <div style={{ display:'flex', gap:7, alignItems:'center', flexWrap:'wrap' }}>
+            <div className="fy-badge">FY 2025-26 / 2026-27</div>
+            <button className="btn btn-secondary btn-sm" onClick={()=>{const n=today();setViewYear(n.getFullYear());setViewMonth(n.getMonth());}}>Today</button>
+          </div>
+        </div>
+        <div className="filter-row">
+          <div className={`filter-pill ${catFilter==='all'?'active':''}`} onClick={()=>setCatFilter('all')}>All</div>
+          {COMP_CATEGORIES.map(c=>(
+            <div key={c.id} className={`filter-pill ${catFilter===c.id?'active':''}`}
+              style={catFilter===c.id?{borderColor:c.color,color:c.color,background:c.bg}:{}}
+              onClick={()=>setCatFilter(c.id)}>{c.label}</div>
+          ))}
+        </div>
+        <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:14 }}>
+          {COMP_CATEGORIES.map(c=>(
+            <div key={c.id} style={{ display:'flex', alignItems:'center', gap:3, fontSize:10.5, color:'var(--text2)' }}>
+              <div style={{ width:7, height:7, borderRadius:2, background:c.color }}/>
+              {c.label}
+            </div>
+          ))}
+        </div>
+        <div className="calendar-grid">
+          {DAYS.map(d=><div key={d} className="cal-day-header">{d}</div>)}
+          {cells.map((cell,i)=>{
+            const isToday = !cell.other && cell.day===todayObj.getDate() && viewMonth===todayObj.getMonth() && viewYear===todayObj.getFullYear();
+            const dayTasks = cell.other?[]:(tasksByDay[cell.day]||[]);
+            const isSelected = !cell.other && selectedDay===cell.day;
+            return (
+              <div key={i} className={`cal-day ${isToday?'today':''} ${cell.other?'other-month':''}`}
+                style={isSelected?{border:'2px solid var(--secondary)',background:'rgba(124,58,237,.1)'}:{}}
+                onClick={()=>!cell.other&&setSelectedDay(cell.day===selectedDay?null:cell.day)}>
+                <div className="day-num">{cell.day}</div>
+                {dayTasks.slice(0,3).map(t=>{
+                  const c=getCatInfo(t.cat);
+                  return <div key={t.id} className="cal-event" style={{ background:c.bg, color:c.color, border:`1px solid ${c.color}30`, textDecoration:t.status==='done'?'line-through':'none' }} title={t.name}>
+                    {t.name.replace(/\(.*\)/,'').trim().slice(0,17)}
+                  </div>;
+                })}
+                {dayTasks.length>3&&<div className="cal-more">+{dayTasks.length-3} more</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selected Day Panel */}
+      {selectedDay && (
+        <div className="card fade-in">
+          <div className="card-header">
+            <div className="card-title">📌 {selectedDay} {SHORT_MONTHS[viewMonth]} {viewYear} — Compliance Due</div>
+            <button className="btn btn-ghost btn-sm" onClick={()=>setSelectedDay(null)}>✕ Close</button>
+          </div>
+          {selectedTasks.length===0 ? (
+            <div style={{ color:'var(--text2)', fontSize:13, padding:'10px 0', textAlign:'center' }}>✅ No compliance due on this date.</div>
+          ) : selectedTasks.map(t=>{
+            const c = getCatInfo(t.cat);
+            return (
+              <div key={t.id} style={{ padding:'13px', background:'var(--dark2)', borderRadius:11, marginBottom:8, border:`1px solid ${c.color}30` }}>
+                <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:7, flexWrap:'wrap' }}>
+                  <CategoryTag cat={t.cat}/>
+                  <span style={{ fontWeight:700, fontSize:13.5, flex:1 }}>{t.name}</span>
+                  <span className={`due-badge due-${t.status==='done'?'upcoming':getDueStatus(t.due)}`} style={t.status==='done'?{background:'rgba(16,185,129,.15)',color:'var(--accent)'}:{}}>{t.status==='done'?'✅ Done':formatDate(t.due)}</span>
+                </div>
+                {t.desc&&<div style={{ fontSize:11.5, color:'var(--text2)', marginBottom:6 }}>{t.desc}</div>}
+                {t.notes&&<div style={{ fontSize:11, color:'var(--accent2)', background:'rgba(245,158,11,.08)', borderRadius:6, padding:'4px 8px', marginBottom:6 }}>📝 {t.notes}</div>}
+                <div style={{ display:'flex', gap:10, fontSize:11.5, color:'var(--text3)', flexWrap:'wrap', marginBottom:8 }}>
+                  {t.form&&<span>📝 {t.form}</span>}
+                  {t.period&&<span>📅 {t.period}</span>}
+                  {t.penaltyInfo&&<span style={{ color:'#FCA5A5' }}>⚠️ {t.penaltyInfo}</span>}
+                </div>
+                <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
+                  <button className="btn btn-sm" style={{ background:t.status==='done'?'rgba(255,255,255,.06)':'rgba(16,185,129,.14)', color:t.status==='done'?'var(--text2)':'var(--accent)', border:`1px solid ${t.status==='done'?'var(--border)':'rgba(16,185,129,.28)'}` }}
+                    onClick={()=>onUpdateTasks(tasks.map(x=>x.id===t.id?{...x,status:x.status==='done'?'pending':'done'}:x))}>
+                    {t.status==='done'?'↩️ Mark Pending':'✅ Mark Done'}
+                  </button>
+                  <button className="btn btn-secondary btn-sm" onClick={()=>openEdit(t)}>✏️ Edit / Notes</button>
+                  <button className="btn btn-gcal btn-sm" onClick={()=>openGCal(t)} title="Add to Google Calendar">📅 Add to Google Calendar</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editTask && (
+        <div className="modal-overlay" onClick={()=>setEditTask(null)}>
+          <div className="modal fade-in" onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">✏️ Edit Compliance</div>
+                <div style={{ fontSize:12, color:'var(--text2)', marginTop:4 }}>{editTask.name}</div>
+              </div>
+              <button className="close-btn" onClick={()=>setEditTask(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Status</label>
+                  <select value={editForm.status} onChange={e=>setEditForm(f=>({...f,status:e.target.value}))}>
+                    <option value="pending">⏳ Pending</option>
+                    <option value="done">✅ Done</option>
+                    <option value="inprogress">🔄 In Progress</option>
+                    <option value="na">➖ N/A</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Due Date (Override)</label>
+                  <input type="date" value={editForm.due} onChange={e=>setEditForm(f=>({...f,due:e.target.value}))}/>
+                </div>
+                <div className="form-group full">
+                  <label>Notes / Remarks</label>
+                  <textarea rows={3} value={editForm.notes} onChange={e=>setEditForm(f=>({...f,notes:e.target.value}))} placeholder="Add notes, reference numbers, filed by whom..."/>
+                </div>
+              </div>
+              <div style={{ marginTop:12 }}>
+                <button className="btn btn-gcal" onClick={()=>openGCal({...editTask,...editForm})} style={{ width:'100%', justifyContent:'center' }}>
+                  📅 Add to Google Calendar
+                </button>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={()=>setEditTask(null)}>Cancel</button>
+              <button className="btn btn-primary" onClick={saveEdit}>💾 Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── TASKS ───────────────────────────────────────────────────────────────────
+
+function TasksView({ tasks, onUpdate }) {
+  const [filter, setFilter] = useState('pending');
+  const [catFilter, setCatFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  const filtered = useMemo(() => {
+    let t = tasks;
+    if (filter==='pending') t=t.filter(x=>x.status!=='done');
+    else if (filter==='done') t=t.filter(x=>x.status==='done');
+    else if (filter==='overdue') t=t.filter(x=>x.status!=='done'&&getDueStatus(x.due)==='overdue');
+    if (catFilter!=='all') t=t.filter(x=>x.cat===catFilter);
+    if (search) t=t.filter(x=>x.name.toLowerCase().includes(search.toLowerCase())||(x.form||'').toLowerCase().includes(search.toLowerCase()));
+    return t.sort((a,b)=>new Date(a.due)-new Date(b.due));
+  }, [tasks,filter,catFilter,search]);
+
+  const counts = useMemo(()=>({
+    all:tasks.length, pending:tasks.filter(t=>t.status!=='done').length,
+    done:tasks.filter(t=>t.status==='done').length,
+    overdue:tasks.filter(t=>t.status!=='done'&&getDueStatus(t.due)==='overdue').length,
+  }),[tasks]);
+
+  const toggleStatus = id => onUpdate(tasks.map(t=>t.id===id?{...t,status:t.status==='done'?'pending':'done'}:t));
+
+  const openDetail = t => { setSelectedTask(t); setEditForm({status:t.status,notes:t.notes||'',due:t.due}); };
+  const saveDetail = () => {
+    onUpdate(tasks.map(t=>t.id===selectedTask.id?{...t,...editForm}:t));
+    setSelectedTask(null);
+  };
+
+  return (
+    <div className="page fade-in">
+      <div className="card" style={{ marginBottom:18 }}>
+        <div style={{ display:'flex', gap:7, flexWrap:'wrap', marginBottom:11 }}>
+          {[{id:'all',l:`All (${counts.all})`},{id:'pending',l:`Pending (${counts.pending})`},{id:'overdue',l:`⚠️ Overdue (${counts.overdue})`},{id:'done',l:`✅ Done (${counts.done})`}].map(f=>(
+            <button key={f.id} className={`tab ${filter===f.id?'active':''}`} style={{ padding:'6px 15px', fontSize:12 }} onClick={()=>setFilter(f.id)}>{f.l}</button>
+          ))}
+        </div>
+        <div style={{ display:'flex', gap:9, flexWrap:'wrap' }}>
+          <div className="search-bar" style={{ flex:1, minWidth:180 }}>
+            <span className="search-icon">🔍</span>
+            <input placeholder="Search compliance..." value={search} onChange={e=>setSearch(e.target.value)}/>
+          </div>
+          <select value={catFilter} onChange={e=>setCatFilter(e.target.value)} style={{ width:'auto', minWidth:140 }}>
+            <option value="all">All Categories</option>
+            {COMP_CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">📋 Compliance Tasks — {filtered.length} items</div>
+          <div style={{ display:'flex', gap:7 }}>
+            <button className="btn btn-success btn-sm" onClick={()=>onUpdate(tasks.map(t=>filtered.find(f=>f.id===t.id)?{...t,status:'done'}:t))}>✅ Mark All Done</button>
+            <button className="btn btn-secondary btn-sm" onClick={()=>onUpdate(tasks.map(t=>filtered.find(f=>f.id===t.id)?{...t,status:'pending'}:t))}>↩️ Reset All</button>
+          </div>
+        </div>
+        <div style={{ maxHeight:560, overflowY:'auto', paddingRight:3 }}>
+          {filtered.length===0 ? (
+            <div style={{ textAlign:'center', color:'var(--text2)', padding:'38px 0' }}>
+              <div style={{ fontSize:34, marginBottom:8 }}>🎯</div>No tasks match this filter.
+            </div>
+          ) : filtered.map(t=>{
+            const c=getCatInfo(t.cat);
+            return (
+              <div key={t.id} className={`task-item ${t.status==='done'?'done':''}`} style={{ borderLeft:`3px solid ${c.color}` }}>
+                <div className={`task-checkbox ${t.status==='done'?'checked':''}`} onClick={()=>toggleStatus(t.id)} style={{ cursor:'pointer', borderColor:t.status==='done'?'var(--accent)':c.color }}>
+                  {t.status==='done'&&<span style={{ color:'#fff', fontSize:9 }}>✓</span>}
+                </div>
+                <div style={{ flex:1, minWidth:0 }} onClick={()=>openDetail(t)}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, flexWrap:'wrap' }}>
+                    <span className="task-name" style={{ textDecoration:t.status==='done'?'line-through':'none' }}>{t.name}</span>
+                    <CategoryTag cat={t.cat} size="xs"/>
+                    {t.form&&<span style={{ fontSize:9.5, color:'var(--text3)', background:'rgba(255,255,255,.05)', padding:'1px 5px', borderRadius:4 }}>{t.form}</span>}
+                    {t.fy&&<span style={{ fontSize:9.5, color:'var(--text3)', background:'rgba(255,255,255,.05)', padding:'1px 5px', borderRadius:4 }}>FY {t.fy}</span>}
+                  </div>
+                  {t.desc&&<div style={{ fontSize:10.5, color:'var(--text2)', marginTop:2 }}>{t.desc}</div>}
+                  {t.notes&&<div style={{ fontSize:10, color:'var(--accent2)', marginTop:2 }}>📝 {t.notes}</div>}
+                  <div className="task-meta"><span>📅 {formatDate(t.due)}</span>{t.period&&<span>· {t.period}</span>}</div>
+                </div>
+                {t.status!=='done'&&<DueBadge due={t.due}/>}
+                {t.status==='done'&&<span className="due-badge" style={{ background:'rgba(16,185,129,.15)', color:'var(--accent)' }}>✅ Done</span>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <div className="modal-overlay" onClick={()=>setSelectedTask(null)}>
+          <div className="modal fade-in" onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-title">{selectedTask.name}</div>
+                <div style={{ display:'flex', gap:5, marginTop:5 }}>
+                  <CategoryTag cat={selectedTask.cat}/>
+                  {selectedTask.form&&<span style={{ fontSize:10.5, background:'rgba(255,255,255,.08)', padding:'2px 7px', borderRadius:5, color:'var(--text2)' }}>{selectedTask.form}</span>}
+                </div>
+              </div>
+              <button className="close-btn" onClick={()=>setSelectedTask(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {selectedTask.desc&&<div className="alert alert-info" style={{ marginBottom:14 }}><span>ℹ️</span>{selectedTask.desc}</div>}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
+                {[
+                  {l:'Due Date',v:formatDate(selectedTask.due)},{l:'Period',v:selectedTask.period||'—'},
+                  {l:'FY',v:selectedTask.fy||'—'},{l:'Form',v:selectedTask.form||'—'},
+                ].map(f=>(
+                  <div key={f.l} style={{ background:'var(--dark)', borderRadius:9, padding:'10px 12px' }}>
+                    <div style={{ fontSize:10, color:'var(--text3)', marginBottom:3 }}>{f.l.toUpperCase()}</div>
+                    <div style={{ fontWeight:700, fontSize:13 }}>{f.v}</div>
+                  </div>
+                ))}
+              </div>
+              {selectedTask.penaltyInfo&&<div className="penalty-box" style={{ marginBottom:14 }}>⚠️ <strong>Penalty:</strong> {selectedTask.penaltyInfo}</div>}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
+                <div className="form-group">
+                  <label>Status</label>
+                  <select value={editForm.status} onChange={e=>setEditForm(f=>({...f,status:e.target.value}))}>
+                    <option value="pending">⏳ Pending</option>
+                    <option value="done">✅ Done</option>
+                    <option value="inprogress">🔄 In Progress</option>
+                    <option value="na">➖ N/A</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Due Date (Override)</label>
+                  <input type="date" value={editForm.due} onChange={e=>setEditForm(f=>({...f,due:e.target.value}))}/>
+                </div>
+              </div>
+              <div className="form-group" style={{ marginBottom:14 }}>
+                <label>Notes / Remarks</label>
+                <textarea rows={3} value={editForm.notes} onChange={e=>setEditForm(f=>({...f,notes:e.target.value}))} placeholder="Add reference numbers, filed by whom, challan details..."/>
+              </div>
+              <button className="btn btn-gcal" style={{ width:'100%', justifyContent:'center' }} onClick={()=>openGCal({...selectedTask,...editForm})}>
+                📅 Add to Google Calendar
+              </button>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={()=>setSelectedTask(null)}>Cancel</button>
+              <button className="btn btn-primary" onClick={saveDetail}>💾 Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── PROFILE ─────────────────────────────────────────────────────────────────
+
+function ProfileView({ profile, onSave }) {
+  const [form, setForm] = useState(profile);
+  const [saved, setSaved] = useState(false);
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  const setNested = (key,sub,v) => setForm(f=>({...f,[key]:{...(f[key]||{}), [sub]:v}}));
+  const handleSave = () => { onSave(form); setSaved(true); setTimeout(()=>setSaved(false),2200); };
+
+  const CONSULTANTS = [
+    { key:'gstConsultant', label:'GST Consultant', cat:'gst' },
+    { key:'tdsConsultant', label:'TDS/IT Consultant', cat:'tds' },
+    { key:'pfConsultant',  label:'EPF/PF Consultant', cat:'pf' },
+    { key:'esicConsultant',label:'ESIC Consultant', cat:'esic' },
+    { key:'mcaConsultant', label:'MCA/CS Consultant', cat:'mca' },
+  ];
+
+  return (
+    <div className="page fade-in">
+      {saved&&<div className="alert alert-success fade-in" style={{ marginBottom:14 }}>✅ Profile saved! Compliance calendar updated.</div>}
+
+      {/* Entity */}
+      <div className="card" style={{ marginBottom:18 }}>
+        <div className="card-title" style={{ marginBottom:14 }}>🏢 Entity Type</div>
+        <div className="entity-grid">
+          {ENTITY_TYPES.map(e=>(
+            <div key={e.id} className={`entity-card ${form.entityType===e.id?'selected':''}`}
+              onClick={()=>set('entityType',e.id)}
+              style={form.entityType===e.id?{borderColor:e.color,background:`${e.color}15`}:{}}>
+              <div className="entity-icon">{e.icon}</div>
+              <div className="entity-name">{e.name}</div>
+              <div className="entity-desc">{e.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Basic Info */}
+      <div className="card" style={{ marginBottom:18 }}>
+        <div className="card-title" style={{ marginBottom:14 }}>📋 Basic Information</div>
+        <div className="form-grid">
+          <div className="form-group full"><label>Company / Business / Individual Name *</label><input value={form.name||''} onChange={e=>set('name',e.target.value)} placeholder="Vipin Enterprises Pvt. Ltd."/></div>
+          <div className="form-group"><label>Date of Incorporation</label><input type="date" value={form.doi||''} onChange={e=>set('doi',e.target.value)}/></div>
+          <div className="form-group"><label>Registered State</label>
+            <select value={form.state||''} onChange={e=>set('state',e.target.value)}>
+              <option value="">-- Select State --</option>
+              {['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Nagaland','Odisha','Punjab','Rajasthan','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'].map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label>Business Type</label>
+            <select value={form.bizType||''} onChange={e=>set('bizType',e.target.value)}>
+              <option value="">-- Select --</option>
+              {['manufacturing','trading','services','ngo','finserv','it','realestate','other'].map(b=><option key={b} value={b}>{b.charAt(0).toUpperCase()+b.slice(1)}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label>Primary Contact Mobile</label><input value={form.mobile||''} onChange={e=>set('mobile',e.target.value)} placeholder="+91 98200 00000"/></div>
+          <div className="form-group"><label>Primary Contact Email</label><input type="email" value={form.email||''} onChange={e=>set('email',e.target.value)} placeholder="accounts@company.com"/></div>
+        </div>
+      </div>
+
+      {/* Tax IDs */}
+      <div className="card" style={{ marginBottom:18 }}>
+        <div className="card-title" style={{ marginBottom:14 }}>🔑 Tax & Regulatory IDs</div>
+        <div className="form-grid">
+          {[
+            {k:'pan',l:'PAN Number',p:'ABCDE1234F',mx:10},{k:'tan',l:'TAN Number',p:'MUMT00000A',mx:10},
+            {k:'gstin',l:'GSTIN',p:'27AABCV1234M1ZP',mx:15},{k:'cin',l:'CIN / LLPIN',p:'U74999MH2018PTC123456'},
+            {k:'pfno',l:'EPF/PF No.',p:'MH/BAN/123456/001'},{k:'esicno',l:'ESIC No.',p:'41-00-123456-000-0001'},
+            {k:'ptno',l:'PT RC No.',p:'PT RC Number'},{k:'ptec',l:'PT Enrollment No.',p:'PT EC Number'},
+            {k:'iec',l:'IEC Code',p:'IEC Code (10 digits)',mx:10},{k:'udyam',l:'Udyam / MSME No.',p:'UDYAM-MH-18-0012345'},
+            {k:'fcrano',l:'FCRA Reg. No.',p:'FCRA Registration No.'},{k:'regno12a',l:'12A / 80G No.',p:'12A/80G No.'},
+          ].map(f=>(
+            <div key={f.k} className="form-group">
+              <label>{f.l}</label>
+              <input value={form[f.k]||''} onChange={e=>set(f.k,e.target.value.toUpperCase())} placeholder={f.p} maxLength={f.mx} style={{ fontFamily:'monospace', letterSpacing:'.5px' }}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Consultant Contact Info */}
+      <div className="card" style={{ marginBottom:18 }}>
+        <div className="card-title" style={{ marginBottom:4 }}>📞 Consultant Contact Directory</div>
+        <div style={{ fontSize:11.5, color:'var(--text2)', marginBottom:14 }}>Add email and mobile for your CA, CS, and compliance consultants for quick reference.</div>
+        {CONSULTANTS.map(con=>{
+          const c = getCatInfo(con.cat);
+          const val = form[con.key] || {};
+          return (
+            <div key={con.key} style={{ background:'var(--card2)', borderRadius:13, border:`1px solid ${c.color}20`, padding:'14px', marginBottom:12 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:11 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:c.color }}/>
+                <span style={{ fontWeight:700, fontSize:13, color:c.color }}>{con.label}</span>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+                <div className="form-group"><label>Full Name</label><input value={val.name||''} onChange={e=>setNested(con.key,'name',e.target.value)} placeholder="CA / CS / Advisor Name"/></div>
+                <div className="form-group"><label>Mobile No.</label><input value={val.mobile||''} onChange={e=>setNested(con.key,'mobile',e.target.value)} placeholder="98200 00000"/></div>
+                <div className="form-group"><label>Email Address</label><input type="email" value={val.email||''} onChange={e=>setNested(con.key,'email',e.target.value)} placeholder="ca@firm.com"/></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Modules */}
+      <div className="card" style={{ marginBottom:18 }}>
+        <div className="card-title" style={{ marginBottom:4 }}>⚙️ Compliance Modules</div>
+        <div style={{ fontSize:11.5, color:'var(--text2)', marginBottom:12 }}>Enable modules applicable to your entity.</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(175px,1fr))', gap:9 }}>
+          {[{k:'hasGST',l:'🟢 GST Filing',s:'GSTR-1, 3B, 9'},{k:'hasTDS',l:'🟣 TDS/TCS',s:'24Q, 26Q, 27Q'},{k:'hasPF',l:'🟡 EPF/PF',s:'Monthly ECR'},{k:'hasESIC',l:'🩵 ESIC',s:'Monthly + Returns'},{k:'hasPT',l:'🩷 Prof. Tax',s:'Monthly PT'},{k:'hasAdvTax',l:'🟠 Advance Tax',s:'4 Instalments'},{k:'hasMCA',l:'🔵 MCA/ROC',s:'Annual Filings'},{k:'hasFCRA',l:'🔵 FCRA',s:'FC-4, FC-6D (Sec8)'},{k:'isSEBI',l:'⚡ SEBI/Listed',s:'LODR Disclosures'}].map(m=>(
+            <div key={m.k} onClick={()=>set(m.k,!form[m.k])} style={{ padding:'11px 13px', borderRadius:11, border:`2px solid ${form[m.k]?'var(--primary)':'var(--border)'}`, cursor:'pointer', background:form[m.k]?'rgba(255,107,53,.08)':'var(--dark2)', transition:'all .2s' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:3 }}>
+                <span style={{ fontSize:12.5, fontWeight:600 }}>{m.l}</span>
+                <div style={{ width:17, height:17, borderRadius:4, border:`2px solid ${form[m.k]?'var(--primary)':'var(--border)'}`, background:form[m.k]?'var(--primary)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'#fff' }}>{form[m.k]?'✓':''}</div>
+              </div>
+              <div style={{ fontSize:10.5, color:'var(--text2)' }}>{m.s}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display:'flex', gap:9 }}>
+        <button className="btn btn-primary" onClick={handleSave} style={{ flex:1 }}>💾 Save Profile & Update Calendar</button>
+        <button className="btn btn-secondary" onClick={()=>setForm(profile)}>↩️ Reset</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── PORTALS & PASSWORDS ─────────────────────────────────────────────────────
+
+function PortalsView({ portals, onSave }) {
+  const [list, setList] = useState(portals);
+  const [visible, setVisible] = useState({});
+  const [editing, setEditing] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [copied, setCopied] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [newPortal, setNewPortal] = useState({ name:'', url:'', cat:'gst', loginId:'', password:'' });
+  const [saved, setSaved] = useState(false);
+
+  const toggleVis = (id,field) => setVisible(v=>({...v,[`${id}_${field}`]:!v[`${id}_${field}`]}));
+  const copyVal = (val,key) => { navigator.clipboard.writeText(val).catch(()=>{}); setCopied(key); setTimeout(()=>setCopied(''),1500); };
+  const openEdit = (p) => { setEditing(p.id); setEditForm({...p}); };
+  const saveEdit = () => { const updated = list.map(p=>p.id===editing?{...editForm}:p); setList(updated); onSave(updated); setEditing(null); setSaved(true); setTimeout(()=>setSaved(false),1800); };
+  const deletePortal = id => { const updated = list.filter(p=>p.id!==id); setList(updated); onSave(updated); };
+  const addPortal = () => {
+    const p = { ...newPortal, id:'p'+Date.now() };
+    const updated = [...list, p]; setList(updated); onSave(updated);
+    setNewPortal({ name:'', url:'', cat:'gst', loginId:'', password:'' });
+    setShowAdd(false);
+  };
+
+  return (
+    <div className="page fade-in">
+      {saved&&<div className="alert alert-success fade-in" style={{ marginBottom:14 }}>✅ Saved securely in browser.</div>}
+      <div className="alert alert-warning" style={{ marginBottom:18 }}>
+        <span>🔒</span>
+        <div><strong>Security Notice:</strong> Passwords are stored only in your browser's local storage. Do not use this on shared or public computers. Always use strong, unique passwords for government portals.</div>
+      </div>
+
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+        <div className="card-title">🔑 Compliance Portal Login Credentials</div>
+        <button className="btn btn-primary btn-sm" onClick={()=>setShowAdd(s=>!s)}>+ Add Portal</button>
+      </div>
+
+      {showAdd && (
+        <div className="card fade-in" style={{ marginBottom:16, border:'1px solid var(--primary)30' }}>
+          <div className="card-title" style={{ marginBottom:12 }}>➕ Add New Portal</div>
+          <div className="form-grid">
+            <div className="form-group"><label>Portal Name</label><input value={newPortal.name} onChange={e=>setNewPortal(p=>({...p,name:e.target.value}))} placeholder="e.g. GST Portal"/></div>
+            <div className="form-group"><label>Category</label><select value={newPortal.cat} onChange={e=>setNewPortal(p=>({...p,cat:e.target.value}))}>{COMP_CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
+            <div className="form-group full"><label>Portal URL</label><input value={newPortal.url} onChange={e=>setNewPortal(p=>({...p,url:e.target.value}))} placeholder="https://portal.gov.in"/></div>
+            <div className="form-group"><label>Login ID / Username</label><input value={newPortal.loginId} onChange={e=>setNewPortal(p=>({...p,loginId:e.target.value}))}/></div>
+            <div className="form-group"><label>Password</label><input type="text" value={newPortal.password} onChange={e=>setNewPortal(p=>({...p,password:e.target.value}))}/></div>
+          </div>
+          <div style={{ display:'flex', gap:8, marginTop:12 }}>
+            <button className="btn btn-primary btn-sm" onClick={addPortal} disabled={!newPortal.name}>💾 Add Portal</button>
+            <button className="btn btn-secondary btn-sm" onClick={()=>setShowAdd(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:14 }}>
+        {list.map(p => {
+          const c = getCatInfo(p.cat);
+          const isEdit = editing === p.id;
+          return (
+            <div key={p.id} className="pwd-card" style={{ border:`1px solid ${c.color}25` }}>
+              <div className="pwd-header" style={{ background:`${c.color}10` }}>
+                <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:c.color }}/>
+                  <span style={{ fontWeight:700, fontSize:13.5, color:c.color }}>{p.name}</span>
+                </div>
+                <div style={{ display:'flex', gap:5 }}>
+                  <a href={p.url} target="_blank" rel="noopener noreferrer" className="copy-btn" title="Open Portal" style={{ textDecoration:'none' }}>🌐 Open</a>
+                  <button className="copy-btn" onClick={()=>openEdit(p)}>✏️ Edit</button>
+                  <button className="copy-btn" onClick={()=>deletePortal(p.id)} style={{ color:'var(--accent3)' }}>🗑️</button>
+                </div>
+              </div>
+              <div className="pwd-body">
+                {isEdit ? (
+                  <div>
+                    <div className="form-group" style={{ marginBottom:8 }}><label>Login ID</label><input value={editForm.loginId} onChange={e=>setEditForm(f=>({...f,loginId:e.target.value}))}/></div>
+                    <div className="form-group" style={{ marginBottom:8 }}><label>Password</label><input type="text" value={editForm.password} onChange={e=>setEditForm(f=>({...f,password:e.target.value}))}/></div>
+                    <div className="form-group" style={{ marginBottom:10 }}><label>URL</label><input value={editForm.url} onChange={e=>setEditForm(f=>({...f,url:e.target.value}))}/></div>
+                    <div style={{ display:'flex', gap:7 }}>
+                      <button className="btn btn-primary btn-sm" onClick={saveEdit}>💾 Save</button>
+                      <button className="btn btn-secondary btn-sm" onClick={()=>setEditing(null)}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="pwd-field">
+                      <span className="pwd-label">Login ID</span>
+                      <span className="pwd-val">{visible[`${p.id}_id`] ? p.loginId || '—' : p.loginId ? '●●●●●●●●' : 'Not set'}</span>
+                      {p.loginId&&<><button className="pwd-eye" onClick={()=>toggleVis(p.id,'id')}>{visible[`${p.id}_id`]?'🙈':'👁️'}</button><button className="copy-btn" onClick={()=>copyVal(p.loginId,`${p.id}_id`)}>{copied===`${p.id}_id`?'✅':'Copy'}</button></>}
+                    </div>
+                    <div className="pwd-field">
+                      <span className="pwd-label">Password</span>
+                      <span className="pwd-val">{visible[`${p.id}_pw`] ? p.password || '—' : p.password ? '●●●●●●●●' : 'Not set'}</span>
+                      {p.password&&<><button className="pwd-eye" onClick={()=>toggleVis(p.id,'pw')}>{visible[`${p.id}_pw`]?'🙈':'👁️'}</button><button className="copy-btn" onClick={()=>copyVal(p.password,`${p.id}_pw`)}>{copied===`${p.id}_pw`?'✅':'Copy'}</button></>}
+                    </div>
+                    <div className="pwd-field" style={{ borderBottom:'none' }}>
+                      <span className="pwd-label">URL</span>
+                      <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:11, color:'var(--secondary)', textDecoration:'none', flex:1 }}>{p.url.replace('https://','')}</a>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── DATA MANAGEMENT ─────────────────────────────────────────────────────────
+
+function DataView({ profile, tasks, onImport, onReset }) {
+  const [msg, setMsg] = useState('');
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const exportData = () => {
+    const data = { _version:STORAGE_VERSION, exportedAt:new Date().toISOString(), profile, tasks };
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`vtcp-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+    setMsg('✅ Exported successfully!');
+  };
+  const handleImport = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ev => { try { const d=JSON.parse(ev.target.result); if(d.profile&&d.tasks){onImport(d);setMsg('✅ Imported!');}else setMsg('❌ Invalid file.'); } catch{setMsg('❌ Parse error.');} };
+    r.readAsText(f);
+  };
+  const done = tasks.filter(t=>t.status==='done').length;
+
+  return (
+    <div className="page fade-in">
+      {msg&&<div className={`alert ${msg.startsWith('✅')?'alert-success':'alert-danger'} fade-in`} style={{ marginBottom:14 }}><span/>{msg.replace(/^[✅❌]\s*/,'')}</div>}
+      <div className="section-grid">
+        <div>
+          <div className="card" style={{ marginBottom:18 }}>
+            <div className="card-title" style={{ marginBottom:13 }}>💾 Export Data</div>
+            <div style={{ fontSize:13, color:'var(--text2)', lineHeight:1.65, marginBottom:14 }}>Export your complete profile, compliance status and portal list as a JSON backup.</div>
+            <div style={{ background:'var(--dark2)', borderRadius:11, padding:14, marginBottom:14 }}>
+              {[{l:'Profile',v:profile.name||'Unnamed'},{l:'Entity',v:ENTITY_TYPES.find(e=>e.id===profile.entityType)?.name||'—'},{l:'Total Tasks',v:tasks.length},{l:'Completed',v:done},{l:'Storage Version',v:STORAGE_VERSION}].map(r=>(
+                <div key={r.l} className="summary-row"><span style={{ color:'var(--text2)', fontSize:12.5 }}>{r.l}</span><span style={{ fontWeight:700, fontSize:12.5 }}>{r.v}</span></div>
+              ))}
+            </div>
+            <button className="btn btn-primary" style={{ width:'100%' }} onClick={exportData}>⬇️ Export as JSON Backup</button>
+          </div>
+          <div className="card">
+            <div className="card-title" style={{ marginBottom:13 }}>⬆️ Import Data</div>
+            <div style={{ fontSize:13, color:'var(--text2)', lineHeight:1.65, marginBottom:14 }}>Import a VTCP JSON backup. This overwrites current data.</div>
+            <div className="drop-zone" onClick={()=>document.getElementById('import-file').click()}>
+              <div style={{ fontSize:34, marginBottom:10 }}>📂</div>
+              <div style={{ fontSize:13, color:'var(--text2)' }}>Click to select JSON backup file</div>
+              <div style={{ fontSize:11, color:'var(--text3)', marginTop:5 }}>Accepts .json files exported from this app</div>
+            </div>
+            <input id="import-file" type="file" accept=".json" style={{ display:'none' }} onChange={handleImport}/>
+          </div>
+        </div>
+        <div>
+          <div className="card" style={{ marginBottom:16 }}>
+            <div className="card-title" style={{ marginBottom:13, color:'var(--accent3)' }}>🗑️ Danger Zone</div>
+            <div className="alert alert-danger" style={{ marginBottom:14 }}>⚠️ This will reset all compliance statuses to Pending. Profile is retained.</div>
+            {!confirmReset ? (
+              <button className="btn btn-danger" style={{ width:'100%' }} onClick={()=>setConfirmReset(true)}>🗑️ Reset All Compliance Status</button>
+            ) : (
+              <div>
+                <div style={{ fontSize:12.5, color:'var(--accent3)', marginBottom:9, textAlign:'center' }}>Are you sure? Cannot be undone.</div>
+                <div style={{ display:'flex', gap:7 }}>
+                  <button className="btn btn-danger" style={{ flex:1 }} onClick={()=>{onReset();setConfirmReset(false);setMsg('✅ Reset done!');}}>Confirm</button>
+                  <button className="btn btn-secondary" style={{ flex:1 }} onClick={()=>setConfirmReset(false)}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="card">
+            <div className="card-title" style={{ marginBottom:13 }}>📊 Data Summary</div>
+            {COMP_CATEGORIES.map(c=>{
+              const ct=tasks.filter(t=>t.cat===c.id);
+              if(!ct.length) return null;
+              return <div key={c.id} className="summary-row"><div style={{ display:'flex', alignItems:'center', gap:5 }}><div style={{ width:7, height:7, borderRadius:2, background:c.color }}/><span style={{ fontSize:12.5, color:c.color, fontWeight:600 }}>{c.label}</span></div><span style={{ fontSize:11.5, color:'var(--text2)' }}>{ct.filter(t=>t.status==='done').length}/{ct.length} done</span></div>;
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ABOUT ───────────────────────────────────────────────────────────────────
+
+function AboutView() {
+  const portals = [
+    { name:'GST Portal',        url:'https://gst.gov.in',               cat:'gst',  desc:'GSTR-1, GSTR-3B, GSTR-9' },
+    { name:'Income Tax e-Filing',url:'https://incometax.gov.in',        cat:'itr',  desc:'ITR filing, Advance Tax' },
+    { name:'TRACES',            url:'https://tdscpc.gov.in',             cat:'tds',  desc:'TDS returns 24Q, 26Q, 27Q' },
+    { name:'EPFO Portal',       url:'https://epfindia.gov.in',           cat:'pf',   desc:'EPF contributions & returns' },
+    { name:'ESIC Portal',       url:'https://esic.gov.in',               cat:'esic', desc:'ESIC monthly contributions' },
+    { name:'MCA21 Portal',      url:'https://mca.gov.in',                cat:'mca',  desc:'MGT-7, AOC-4, Form 11/8' },
+    { name:'FCRA Portal',       url:'https://fcraonline.nic.in',         cat:'fcra', desc:'FCRA annual return FC-4' },
+    { name:'SEBI LODR',         url:'https://sebi.gov.in',               cat:'sebi', desc:'Listed company disclosures' },
+    { name:'DGFT (IEC)',        url:'https://dgft.gov.in',               cat:'mca',  desc:'Import Export Code portal' },
+    { name:'TIN-NSDL',          url:'https://tin.tin.nsdl.com',         cat:'tds',  desc:'Challan payment, TAN status' },
+  ];
+  return (
+    <div className="page fade-in">
+      <div className="card" style={{ marginBottom:18, textAlign:'center', padding:28 }}>
+        <div style={{ width:62, height:62, background:'linear-gradient(135deg,var(--primary),var(--secondary))', borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:30, margin:'0 auto 14px', boxShadow:'0 8px 24px rgba(255,107,53,.3)' }}>⚖️</div>
+        <div style={{ fontFamily:'Playfair Display,serif', fontSize:21, fontWeight:800, marginBottom:5 }}>Vipin's Tax & Compliance Pro</div>
+        <div style={{ fontSize:12.5, color:'var(--text2)', marginBottom:3 }}>Indian Compliance Management System</div>
+        <div style={{ fontSize:11, color:'var(--text3)' }}>FY 2025-26 & 2026-27 Edition · Version 2.0</div>
+        <div style={{ height:3, background:'linear-gradient(90deg,var(--primary),var(--secondary),var(--accent))', borderRadius:2, maxWidth:200, margin:'18px auto' }}/>
+        <div style={{ fontSize:13, color:'var(--text2)', maxWidth:460, margin:'0 auto', lineHeight:1.7 }}>Covers GST, TDS, EPF, ESIC, Professional Tax, Advance Tax, MCA/ROC, ITR, FCRA, SEBI compliances — with Google Calendar integration, password manager, consultant directory, and dual FY support.</div>
+      </div>
+      <div className="card" style={{ marginBottom:18 }}>
+        <div className="card-title" style={{ marginBottom:14 }}>🌐 Official Government Portals</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))', gap:9 }}>
+          {portals.map(p=>{
+            const c=getCatInfo(p.cat);
+            return <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" style={{ padding:'11px 13px', borderRadius:11, border:`1px solid ${c.color}28`, background:c.bg, textDecoration:'none', display:'block', transition:'all .2s' }}>
+              <div style={{ fontWeight:700, fontSize:12.5, color:c.color, marginBottom:2 }}>{p.name}</div>
+              <div style={{ fontSize:10.5, color:'var(--text2)' }}>{p.desc}</div>
+              <div style={{ fontSize:9.5, color:'var(--text3)', marginTop:3 }}>🔗 {p.url.replace('https://','')}</div>
+            </a>;
+          })}
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-title" style={{ marginBottom:12 }}>⚠️ Disclaimer</div>
+        <div style={{ fontSize:11.5, color:'var(--text2)', lineHeight:1.8 }}>This application is a <strong>compliance tracking reference tool only</strong>. Due dates are based on standard provisions as on April 2025. The government may announce extensions or changes via notifications/circulars. Always verify with official portals or consult your Chartered Accountant / Company Secretary before taking action. Passwords stored locally are not encrypted — use with caution on personal devices only. The creator is not responsible for penalties arising from missed deadlines.</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ONBOARDING ───────────────────────────────────────────────────────────────
+
+function Onboarding({ onComplete }) {
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({ entityType:'', name:'', pan:'', gstin:'', hasGST:true, hasTDS:true, hasPF:false, hasESIC:false, hasPT:false, hasAdvTax:true, hasMCA:false, hasFCRA:false, isSEBI:false });
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  return (
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:20, background:'var(--dark)' }}>
+      <div style={{ width:'100%', maxWidth:600 }}>
+        <div className="onboard-hero">
+          <div className="onboard-logo">⚖️</div>
+          <div className="onboard-title">Vipin's Tax & Compliance Pro</div>
+          <div className="onboard-sub">India's smart compliance tracker — GST, TDS, PF, ESIC, MCA and more for FY 2025-26 & 2026-27.</div>
+          <div style={{ display:'flex', justifyContent:'center', gap:7, marginBottom:28 }}>
+            {[1,2,3].map(s=><div key={s} style={{ width:s===step?22:7, height:7, borderRadius:4, background:s===step?'var(--primary)':s<step?'var(--accent)':'var(--border)', transition:'all .3s' }}/>)}
+          </div>
+        </div>
+        <div className="card fade-in">
+          {step===1&&<>
+            <div className="card-title" style={{ marginBottom:3 }}>Step 1 of 3 · Choose Entity Type</div>
+            <div style={{ fontSize:11.5, color:'var(--text2)', marginBottom:18 }}>Select your business structure to get the right compliance calendar.</div>
+            <div className="entity-grid">
+              {ENTITY_TYPES.map(e=>(
+                <div key={e.id} className={`entity-card ${form.entityType===e.id?'selected':''}`} onClick={()=>set('entityType',e.id)} style={form.entityType===e.id?{borderColor:e.color,background:`${e.color}18`}:{}}>
+                  <div className="entity-icon">{e.icon}</div>
+                  <div className="entity-name">{e.name}</div>
+                  <div className="entity-desc">{e.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:18, display:'flex', justifyContent:'flex-end' }}><button className="btn btn-primary" disabled={!form.entityType} onClick={()=>setStep(2)}>Next →</button></div>
+          </>}
+          {step===2&&<>
+            <div className="card-title" style={{ marginBottom:3 }}>Step 2 of 3 · Entity Details</div>
+            <div style={{ fontSize:11.5, color:'var(--text2)', marginBottom:18 }}>Enter your basic details to personalise the compliance calendar.</div>
+            <div className="form-grid">
+              <div className="form-group full"><label>Business / Company Name *</label><input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Enter registered name"/></div>
+              <div className="form-group"><label>PAN Number</label><input value={form.pan||''} onChange={e=>set('pan',e.target.value.toUpperCase())} placeholder="ABCDE1234F" maxLength={10}/></div>
+              <div className="form-group"><label>GST Number</label><input value={form.gstin||''} onChange={e=>set('gstin',e.target.value.toUpperCase())} placeholder="27AABCU9603R1ZM" maxLength={15}/></div>
+            </div>
+            <div style={{ marginTop:18, display:'flex', justifyContent:'space-between' }}>
+              <button className="btn btn-secondary" onClick={()=>setStep(1)}>← Back</button>
+              <button className="btn btn-primary" disabled={!form.name} onClick={()=>setStep(3)}>Next →</button>
+            </div>
+          </>}
+          {step===3&&<>
+            <div className="card-title" style={{ marginBottom:3 }}>Step 3 of 3 · Applicable Modules</div>
+            <div style={{ fontSize:11.5, color:'var(--text2)', marginBottom:16 }}>Select compliance modules that apply to you.</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+              {[{k:'hasGST',l:'🟢 GST',s:'GSTR-1,3B,9'},{k:'hasTDS',l:'🟣 TDS/TCS',s:'24Q,26Q,27Q'},{k:'hasPF',l:'🟡 EPF/PF',s:'Monthly + Returns'},{k:'hasESIC',l:'🩵 ESIC',s:'Monthly + Returns'},{k:'hasPT',l:'🩷 Prof. Tax',s:'Monthly/Annual'},{k:'hasAdvTax',l:'🟠 Advance Tax',s:'4 Instalments'},{k:'hasMCA',l:'🔵 MCA/ROC',s:form.entityType==='llp'?'Form 8, 11':'MGT-7, AOC-4'},{k:'hasFCRA',l:'🔵 FCRA',s:'For Sec 8 NGOs'},{k:'isSEBI',l:'⚡ SEBI/Listed',s:'LODR (Pub. Ltd)'}].map(m=>(
+                <div key={m.k} onClick={()=>set(m.k,!form[m.k])} style={{ padding:'9px 11px', borderRadius:9, border:`2px solid ${form[m.k]?'var(--primary)':'var(--border)'}`, cursor:'pointer', background:form[m.k]?'rgba(255,107,53,.08)':'var(--dark2)', transition:'all .2s', display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:15, height:15, borderRadius:4, border:`2px solid ${form[m.k]?'var(--primary)':'var(--border)'}`, background:form[m.k]?'var(--primary)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:8.5, color:'#fff', flexShrink:0 }}>{form[m.k]?'✓':''}</div>
+                  <div><div style={{ fontSize:12, fontWeight:600 }}>{m.l}</div><div style={{ fontSize:9.5, color:'var(--text2)' }}>{m.s}</div></div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:18, display:'flex', justifyContent:'space-between' }}>
+              <button className="btn btn-secondary" onClick={()=>setStep(2)}>← Back</button>
+              <button className="btn btn-primary" onClick={()=>onComplete(form)}>🚀 Launch Dashboard →</button>
+            </div>
+          </>}
+        </div>
+        <div style={{ textAlign:'center', marginTop:18, fontSize:10.5, color:'var(--text3)' }}>©2025 Vipin's Tax & Compliance Pro · Compliance data is for reference only. Consult your CA/CS for professional advice.</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+
+const NAV_ITEMS = [
+  { id:'dashboard', label:'Dashboard',          icon:'🏠' },
+  { id:'calendar',  label:'Compliance Calendar', icon:'📅' },
+  { id:'tasks',     label:'Task Manager',        icon:'📋' },
+  { id:'portals',   label:'Portals & Passwords', icon:'🔑' },
+  { id:'profile',   label:'Profile & Settings',  icon:'👤' },
+  { id:'data',      label:'Data Management',     icon:'💾' },
+  { id:'about',     label:'About & Portals',     icon:'ℹ️' },
+];
+const PAGE_TITLES = {
+  dashboard:{ title:'Dashboard',              sub:'Compliance overview · FY 2025-26 & 2026-27' },
+  calendar: { title:'Compliance Calendar',    sub:'Monthly view of all due dates' },
+  tasks:    { title:'Task Manager',           sub:'Track and update all compliance tasks' },
+  portals:  { title:'Portals & Passwords',    sub:'Secure login credentials for compliance portals' },
+  profile:  { title:'Profile & Settings',     sub:'Entity details, consultants & module configuration' },
+  data:     { title:'Data Management',        sub:'Export, import and manage your data' },
+  about:    { title:'About & Resources',      sub:'App info and official government portals' },
+};
+
+function App() {
+  const [theme, setTheme] = useState(() => loadPersist('theme','dark'));
+  const [onboarded, setOnboarded] = useState(() => loadPersist('onboarded', true));
+  const [profile, setProfile] = useState(() => loadPersist('profile', DEFAULT_PROFILE));
+  const [tasks, setTasks] = useState(() => loadPersist('tasks', null));
+  const [portals, setPortals] = useState(() => loadPersist('portals', PORTAL_DEFAULTS));
+  const [activePage, setActivePage] = useState('dashboard');
+
+  // Apply theme to body
+  useEffect(() => {
+    document.body.className = theme === 'light' ? 'light' : '';
+    savePersist('theme', theme);
+  }, [theme]);
+
+  const generateTasks = useCallback((prof) => {
+    const all = generateCompliances(prof.entityType);
+    return all.filter(c => {
+      if (c.cat==='gst'  && !prof.hasGST)    return false;
+      if (c.cat==='tds'  && !prof.hasTDS)    return false;
+      if (c.cat==='pf'   && !prof.hasPF)     return false;
+      if (c.cat==='esic' && !prof.hasESIC)   return false;
+      if (c.cat==='pt'   && !prof.hasPT)     return false;
+      if (c.cat==='it'   && !prof.hasAdvTax) return false;
+      if (c.cat==='mca'  && !prof.hasMCA)    return false;
+      if (c.cat==='fcra' && !prof.hasFCRA)   return false;
+      if (c.cat==='sebi' && !prof.isSEBI)    return false;
+      return true;
+    }).map(c => ({ ...c, status:'pending', notes:'' }));
+  }, []);
+
+  useEffect(() => {
+    if (onboarded && tasks === null) {
+      const t = generateTasks(profile);
+      setTasks(t); savePersist('tasks', t);
+    }
+  }, [onboarded]);
+
+  useEffect(() => { savePersist('profile', profile); }, [profile]);
+  useEffect(() => { if (tasks) savePersist('tasks', tasks); }, [tasks]);
+  useEffect(() => { savePersist('portals', portals); }, [portals]);
+
+  const handleOnboardComplete = prof => {
+    setProfile(prof); savePersist('profile', prof);
+    const t = generateTasks(prof); setTasks(t); savePersist('tasks', t);
+    setOnboarded(true); savePersist('onboarded', true);
+  };
+  const handleProfileSave = prof => {
+    setProfile(prof);
+    const newList = generateTasks(prof);
+    const oldMap = {}; (tasks||[]).forEach(t=>oldMap[t.id]=t.status);
+    setTasks(newList.map(t=>({...t, status:oldMap[t.id]||'pending'})));
+  };
+  const handleImport = data => {
+    setProfile(data.profile); setTasks(data.tasks);
+    if (data.portals) setPortals(data.portals);
+    setOnboarded(true); savePersist('onboarded', true);
+  };
+  const handleReset = () => setTasks(t => t ? t.map(x=>({...x,status:'pending'})) : t);
+
+  const overdueCnt = useMemo(() => (tasks||[]).filter(t=>t.status!=='done'&&getDueStatus(t.due)==='overdue').length, [tasks]);
+
+  if (!onboarded) return <Onboarding onComplete={handleOnboardComplete}/>;
+
+  const pageInfo = PAGE_TITLES[activePage];
+  const entity = ENTITY_TYPES.find(e=>e.id===profile.entityType);
+
+  return (
+    <div className="app-layout">
+      {/* SIDEBAR */}
+      <div className="sidebar">
+        <div className="brand">
+          <div className="brand-logo">⚖️</div>
+          <div className="brand-name">Vipin's Tax &<br/>Compliance Pro</div>
+          <div className="brand-tagline">FY 2025-26 / 2026-27</div>
+        </div>
+        <div className="nav-section">
+          <div className="nav-label">Navigation</div>
+          {NAV_ITEMS.map(item=>(
+            <div key={item.id} className={`nav-item ${activePage===item.id?'active':''}`} onClick={()=>setActivePage(item.id)}>
+              <div className="nav-icon">{item.icon}</div>
+              {item.label}
+              {item.id==='tasks' && overdueCnt>0 && <span className="nav-badge">{overdueCnt}</span>}
+            </div>
+          ))}
+        </div>
+        {profile.name && (
+          <div className="sidebar-profile" onClick={()=>setActivePage('profile')}>
+            <div className="profile-entity-badge">{entity?.icon} {entity?.name}</div>
+            <div className="profile-name">{profile.name}</div>
+            {profile.pan  && <div className="profile-pan">PAN: {profile.pan}</div>}
+            {profile.gstin && <div className="profile-pan">GST: {profile.gstin}</div>}
+          </div>
+        )}
+      </div>
+
+      {/* MAIN */}
+      <div className="main-content">
+        <div className="topbar">
+          <div>
+            <div className="topbar-title">{pageInfo.title}</div>
+            <div className="topbar-subtitle">{pageInfo.sub}</div>
+          </div>
+          <div className="topbar-actions">
+            {/* Theme Toggle */}
+            <div className="theme-toggle">
+              <button className={`theme-btn ${theme==='dark'?'active':''}`} onClick={()=>setTheme('dark')} title="Dark Mode">🌙</button>
+              <button className={`theme-btn ${theme==='light'?'active':''}`} onClick={()=>setTheme('light')} title="Light Mode">☀️</button>
+            </div>
+            <div className="fy-badge">FY 2025-26</div>
+          </div>
+        </div>
+
+        {activePage==='dashboard' && <Dashboard profile={profile} tasks={tasks||[]} onNavigate={setActivePage}/>}
+        {activePage==='calendar'  && <CalendarView tasks={tasks||[]} onUpdateTasks={setTasks}/>}
+        {activePage==='tasks'     && <TasksView tasks={tasks||[]} onUpdate={setTasks}/>}
+        {activePage==='portals'   && <PortalsView portals={portals} onSave={setPortals}/>}
+        {activePage==='profile'   && <ProfileView profile={profile} onSave={handleProfileSave}/>}
+        {activePage==='data'      && <DataView profile={profile} tasks={tasks||[]} onImport={handleImport} onReset={handleReset}/>}
+        {activePage==='about'     && <AboutView/>}
+
+        <div style={{ padding:'11px 26px', borderTop:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:10.5, color:'var(--text3)' }}>
+          <span>©2025 Vipin's Tax & Compliance Pro · v2.0</span>
+          <span>Data stored locally · Not professional legal advice</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
