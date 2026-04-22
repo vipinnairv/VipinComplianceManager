@@ -7,6 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
 <style>
 /* ── THEME VARIABLES ── */
@@ -262,6 +264,130 @@ function loadPersist(key, def) {
     return v !== null ? JSON.parse(v) : def;
   } catch(e) { return def; }
 }
+
+// ─── AI CLIENT (Groq / Gemini / Claude) ─────────────────────────────────────
+const AI_MODELS = {
+  groq:   { label:'Groq (Llama 3.3 70B)', model:'llama-3.3-70b-versatile', keyHint:'gsk_...' },
+  gemini: { label:'Google Gemini 1.5 Flash', model:'gemini-1.5-flash',     keyHint:'AIza...' },
+  claude: { label:'Anthropic Claude Haiku 4.5', model:'claude-haiku-4-5-20251001', keyHint:'sk-ant-...' },
+};
+const AI_SYSTEM = "You are an expert Indian tax & compliance advisor. Give concise, actionable, India-specific guidance for FY 2025-26/2026-27. Use bullet points. Always remind the user to verify with their CA/CS before acting. No markdown code fences. Max ~180 words.";
+
+async function aiGenerate({ provider, apiKey, prompt }) {
+  if (!apiKey) throw new Error('API key not set for ' + provider);
+  const model = AI_MODELS[provider].model;
+  if (provider === 'groq') {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${apiKey}` },
+      body: JSON.stringify({ model, temperature:0.3, max_tokens:400, messages:[{role:'system',content:AI_SYSTEM},{role:'user',content:prompt}] })
+    });
+    const j = await r.json(); if (!r.ok) throw new Error(j?.error?.message || 'Groq error');
+    return j.choices[0].message.content.trim();
+  }
+  if (provider === 'gemini') {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ systemInstruction:{ parts:[{ text:AI_SYSTEM }] }, contents:[{ role:'user', parts:[{ text: prompt }] }], generationConfig:{ temperature:0.3, maxOutputTokens:500 } })
+    });
+    const j = await r.json(); if (!r.ok) throw new Error(j?.error?.message || 'Gemini error');
+    return (j.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+  }
+  if (provider === 'claude') {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+      body: JSON.stringify({ model, max_tokens:500, system:AI_SYSTEM, messages:[{role:'user',content:prompt}] })
+    });
+    const j = await r.json(); if (!r.ok) throw new Error(j?.error?.message || 'Claude error');
+    return (j.content?.[0]?.text || '').trim();
+  }
+  throw new Error('Unknown provider: ' + provider);
+}
+
+// ─── GOOGLE DRIVE SYNC ──────────────────────────────────────────────────────
+const DRIVE_FILE_NAME = 'TaxCompliancePro.json';
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const driveSync = {
+  tokenClient: null,
+  accessToken: null,
+  fileId: null,
+  gapiReady: false,
+  async _loadGapi() {
+    if (this.gapiReady) return;
+    await new Promise((resolve, reject) => {
+      const check = () => {
+        if (window.gapi) {
+          window.gapi.load('client', async () => {
+            try {
+              await window.gapi.client.init({ discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
+              this.gapiReady = true; resolve();
+            } catch(e){ reject(e); }
+          });
+        } else setTimeout(check, 150);
+      };
+      check();
+    });
+  },
+  async signIn(clientId) {
+    if (!clientId) throw new Error('Missing Google Client ID');
+    await this._loadGapi();
+    await new Promise((resolve, reject) => {
+      const check = () => { if (window.google && window.google.accounts) resolve(); else setTimeout(check,150); };
+      check();
+    });
+    return new Promise((resolve, reject) => {
+      this.tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: DRIVE_SCOPE,
+        callback: async (resp) => {
+          if (resp.error) { reject(resp); return; }
+          this.accessToken = resp.access_token;
+          window.gapi.client.setToken({ access_token: resp.access_token });
+          try {
+            const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers:{ Authorization:`Bearer ${resp.access_token}` } }).then(r=>r.json()).catch(()=>({}));
+            resolve({ email: info.email || 'Google User', name: info.name || '', picture: info.picture || '' });
+          } catch(e){ resolve({ email:'Google User' }); }
+        },
+      });
+      this.tokenClient.requestAccessToken({ prompt: 'consent' });
+    });
+  },
+  signOut() {
+    if (this.accessToken && window.google?.accounts?.oauth2) {
+      try { window.google.accounts.oauth2.revoke(this.accessToken, ()=>{}); } catch(e){}
+    }
+    this.accessToken = null; this.fileId = null;
+    if (window.gapi?.client) window.gapi.client.setToken(null);
+  },
+  async _findFile() {
+    const res = await window.gapi.client.drive.files.list({ q:`name='${DRIVE_FILE_NAME}' and trashed=false`, spaces:'drive', fields:'files(id,name,modifiedTime)' });
+    return res.result.files && res.result.files[0] ? res.result.files[0] : null;
+  },
+  async pushState(payload) {
+    await this._loadGapi();
+    const body = JSON.stringify({ ...payload, updatedAt: new Date().toISOString() }, null, 2);
+    const boundary = '-------vtcp' + Date.now();
+    const delim = `\r\n--${boundary}\r\n`;
+    const close = `\r\n--${boundary}--`;
+    let existing = this.fileId;
+    if (!existing) { const f = await this._findFile(); existing = f ? f.id : null; }
+    const meta = { name: DRIVE_FILE_NAME, mimeType:'application/json' };
+    const multipart = delim + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + delim + 'Content-Type: application/json\r\n\r\n' + body + close;
+    const path = existing ? `/upload/drive/v3/files/${existing}?uploadType=multipart` : '/upload/drive/v3/files?uploadType=multipart';
+    const method = existing ? 'PATCH' : 'POST';
+    const res = await window.gapi.client.request({ path, method, headers:{ 'Content-Type':`multipart/related; boundary="${boundary}"` }, body: multipart });
+    this.fileId = res.result.id || existing;
+    return res.result;
+  },
+  async pullState() {
+    await this._loadGapi();
+    const f = await this._findFile();
+    if (!f) return null;
+    this.fileId = f.id;
+    const res = await window.gapi.client.drive.files.get({ fileId: f.id, alt:'media' });
+    try { return typeof res.body === 'string' ? JSON.parse(res.body) : res.result; } catch(e){ return null; }
+  },
+};
 
 // ─── STATIC DATA ────────────────────────────────────────────────────────────
 
@@ -570,7 +696,7 @@ function ComplianceTile({ cat, tasks, fy, onNavigate }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-function Dashboard({ profile, tasks, onNavigate }) {
+function Dashboard({ profile, tasks, onNavigate, aiCfg }) {
   const [fy, setFy] = useState('2025-26');
   const entity = ENTITY_TYPES.find(e => e.id === profile.entityType);
 
@@ -611,6 +737,14 @@ function Dashboard({ profile, tasks, onNavigate }) {
           <div><strong>{stats.overdue} compliance{stats.overdue>1?'s':''} overdue!</strong> Immediate attention required to avoid penalties.</div>
           <button className="btn btn-danger btn-sm" style={{ marginLeft:'auto', flexShrink:0 }} onClick={()=>onNavigate('tasks')}>View →</button>
         </div>
+      )}
+
+      {aiCfg && (
+        <AIInsight aiCfg={aiCfg}
+          label="🤖 AI Compliance Coach"
+          buttonText="Get Smart Advice"
+          cacheKey={`dash_${profile.entityType}_${fy}_${stats.overdue}_${stats.pending}`}
+          prompt={`Indian compliance dashboard snapshot for FY ${fy}. Entity: ${entity?.name}. ${stats.overdue} overdue, ${stats.soon} due this week, ${stats.pending} pending, ${stats.done} done (total ${stats.total}). Upcoming top 5: ${upcoming.map(u=>`${u.name} due ${u.due}`).join('; ')||'none'}. Give a prioritized action plan for this week, highlight penalty exposure if overdue items are ignored, and suggest what to batch together for efficiency.`}/>
       )}
 
       {/* FY Selector + Section Header */}
@@ -702,7 +836,7 @@ function Dashboard({ profile, tasks, onNavigate }) {
 
 // ─── CALENDAR ────────────────────────────────────────────────────────────────
 
-function CalendarView({ tasks, onUpdateTasks }) {
+function CalendarView({ tasks, onUpdateTasks, aiCfg }) {
   const [viewYear, setViewYear] = useState(() => today().getFullYear());
   const [viewMonth, setViewMonth] = useState(() => today().getMonth());
   const [selectedDay, setSelectedDay] = useState(null);
@@ -804,6 +938,13 @@ function CalendarView({ tasks, onUpdateTasks }) {
             <div className="card-title">📌 {selectedDay} {SHORT_MONTHS[viewMonth]} {viewYear} — Compliance Due</div>
             <button className="btn btn-ghost btn-sm" onClick={()=>setSelectedDay(null)}>✕ Close</button>
           </div>
+          {aiCfg && selectedTasks.length>0 && (
+            <AIInsight aiCfg={aiCfg} compact
+              label={`🤖 Priorities for ${selectedDay} ${SHORT_MONTHS[viewMonth]}`}
+              buttonText="Suggest Order of Action"
+              cacheKey={`day_${viewYear}_${viewMonth}_${selectedDay}`}
+              prompt={`On ${selectedDay} ${SHORT_MONTHS[viewMonth]} ${viewYear}, these Indian compliances are due: ${selectedTasks.map(t=>`${t.name} (${t.form||''})`).join('; ')}. Recommend the optimal order of action for the day, data/logins to have ready for each, and any filings that can be batched together.`}/>
+          )}
           {selectedTasks.length===0 ? (
             <div style={{ color:'var(--text2)', fontSize:13, padding:'10px 0', textAlign:'center' }}>✅ No compliance due on this date.</div>
           ) : selectedTasks.map(t=>{
@@ -886,7 +1027,7 @@ function CalendarView({ tasks, onUpdateTasks }) {
 
 // ─── TASKS ───────────────────────────────────────────────────────────────────
 
-function TasksView({ tasks, onUpdate }) {
+function TasksView({ tasks, onUpdate, aiCfg }) {
   const [filter, setFilter] = useState('pending');
   const [catFilter, setCatFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -1003,6 +1144,11 @@ function TasksView({ tasks, onUpdate }) {
                 ))}
               </div>
               {selectedTask.penaltyInfo&&<div className="penalty-box" style={{ marginBottom:14 }}>⚠️ <strong>Penalty:</strong> {selectedTask.penaltyInfo}</div>}
+              {aiCfg && <AIInsight aiCfg={aiCfg}
+                label="🤖 AI Guide for This Compliance"
+                buttonText="Explain & Checklist"
+                cacheKey={`task_${selectedTask.id}`}
+                prompt={`Explain the Indian compliance "${selectedTask.name}" (form ${selectedTask.form||'N/A'}, period ${selectedTask.period||'N/A'}, due ${selectedTask.due}). Provide: (1) what it is and who must file, (2) step-by-step filing checklist, (3) documents needed, (4) common mistakes, (5) penalty if missed${selectedTask.penaltyInfo?` (${selectedTask.penaltyInfo})`:''}. Keep it tight.`}/>}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
                 <div className="form-group">
                   <label>Status</label>
@@ -1037,9 +1183,165 @@ function TasksView({ tasks, onUpdate }) {
   );
 }
 
+// ─── AI INSIGHT COMPONENT ────────────────────────────────────────────────────
+
+function AIInsight({ aiCfg, label='🤖 AI Insight', buttonText='Generate AI Insight', prompt, cacheKey, compact=false }) {
+  const [state, setState] = useState(() => cacheKey ? loadPersist('aicache_'+cacheKey, { text:'', when:null }) : { text:'', when:null });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const provider = aiCfg?.provider;
+  const apiKey = aiCfg?.keys?.[provider];
+  const ready = !!(provider && apiKey);
+
+  const run = async () => {
+    if (!ready) { setError('Configure AI in Profile → AI Settings first.'); return; }
+    setLoading(true); setError('');
+    try {
+      const text = await aiGenerate({ provider, apiKey, prompt });
+      const fresh = { text, when: new Date().toISOString(), provider };
+      setState(fresh);
+      if (cacheKey) savePersist('aicache_'+cacheKey, fresh);
+    } catch(e) { setError(e.message || 'AI call failed'); }
+    finally { setLoading(false); }
+  };
+
+  const pLabel = provider ? AI_MODELS[provider]?.label : 'No provider';
+  return (
+    <div style={{ background:'linear-gradient(135deg,rgba(124,58,237,.08),rgba(255,107,53,.06))', border:'1px solid rgba(124,58,237,.25)', borderRadius:11, padding: compact?'10px 12px':'13px 15px', marginBottom: compact?10:14 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, marginBottom: state.text||error?9:0, flexWrap:'wrap' }}>
+        <div style={{ fontSize:12, fontWeight:700, color:'var(--secondary)', display:'flex', alignItems:'center', gap:6 }}>
+          <span>{label}</span>
+          <span style={{ fontSize:9.5, color:'var(--text3)', fontWeight:600 }}>· {pLabel}</span>
+        </div>
+        <button className="btn btn-sm" onClick={run} disabled={loading||!ready} style={{ background:'linear-gradient(135deg,var(--secondary),var(--primary))', color:'#fff', fontSize:11, padding:'5px 12px' }}>
+          {loading ? '⏳ Thinking…' : (state.text ? '🔄 Regenerate' : buttonText)}
+        </button>
+      </div>
+      {error && <div style={{ fontSize:11, color:'var(--accent3)', marginTop:6 }}>⚠️ {error}</div>}
+      {state.text && (
+        <div style={{ fontSize:12, color:'var(--text)', lineHeight:1.65, whiteSpace:'pre-wrap', marginTop:4 }}>
+          {state.text}
+          <div style={{ fontSize:9.5, color:'var(--text3)', marginTop:6 }}>Generated {state.when ? new Date(state.when).toLocaleString('en-IN') : ''} · Verify with your CA/CS.</div>
+        </div>
+      )}
+      {!state.text && !error && !loading && !ready && (
+        <div style={{ fontSize:10.5, color:'var(--text3)', marginTop:6 }}>Add an AI API key in Profile → AI Settings to enable insights.</div>
+      )}
+    </div>
+  );
+}
+
+// ─── AI SETTINGS PANEL ───────────────────────────────────────────────────────
+
+function AISettingsPanel({ aiCfg, onChange }) {
+  const [keys, setKeys] = useState(aiCfg.keys || {});
+  const [provider, setProvider] = useState(aiCfg.provider || 'groq');
+  const [showKey, setShowKey] = useState({});
+  const [saved, setSaved] = useState(false);
+  const save = () => { onChange({ provider, keys }); setSaved(true); setTimeout(()=>setSaved(false),1600); };
+  return (
+    <div className="card" style={{ marginBottom:18 }}>
+      <div className="card-header">
+        <div className="card-title">🤖 AI Insights Settings</div>
+        {saved && <span style={{ fontSize:11, color:'var(--accent)' }}>✅ Saved</span>}
+      </div>
+      <div style={{ fontSize:11.5, color:'var(--text2)', marginBottom:12 }}>Pick an AI provider to power "AI Insight" buttons across Dashboard, Tasks, and Profile. Keys are stored locally in your browser only.</div>
+      <div className="form-group" style={{ marginBottom:12 }}>
+        <label>Active Provider</label>
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          {Object.entries(AI_MODELS).map(([k,v]) => (
+            <button key={k} onClick={()=>setProvider(k)} style={{ flex:'1 1 30%', padding:'9px 10px', borderRadius:9, border:`1px solid ${provider===k?'var(--primary)':'var(--border)'}`, background:provider===k?'rgba(255,107,53,.12)':'var(--card2)', color:provider===k?'var(--primary)':'var(--text2)', cursor:'pointer', fontSize:11.5, fontWeight:600, fontFamily:'Outfit,sans-serif' }}>{v.label}</button>
+          ))}
+        </div>
+      </div>
+      {Object.entries(AI_MODELS).map(([k,v]) => (
+        <div key={k} className="form-group" style={{ marginBottom:10 }}>
+          <label>{v.label} API Key</label>
+          <div style={{ display:'flex', gap:6 }}>
+            <input type={showKey[k]?'text':'password'} value={keys[k]||''} onChange={e=>setKeys(x=>({...x,[k]:e.target.value}))} placeholder={v.keyHint} style={{ fontFamily:'monospace', fontSize:11.5 }}/>
+            <button className="btn btn-secondary btn-sm" onClick={()=>setShowKey(x=>({...x,[k]:!x[k]}))}>{showKey[k]?'🙈':'👁️'}</button>
+          </div>
+        </div>
+      ))}
+      <button className="btn btn-primary" style={{ width:'100%', justifyContent:'center', marginTop:6 }} onClick={save}>💾 Save AI Settings</button>
+      <div style={{ fontSize:10.5, color:'var(--text3)', marginTop:9, lineHeight:1.55 }}>
+        🔗 Get keys: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style={{ color:'var(--secondary)' }}>Groq</a> · <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style={{ color:'var(--secondary)' }}>Gemini</a> · <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style={{ color:'var(--secondary)' }}>Claude</a>
+      </div>
+    </div>
+  );
+}
+
+// ─── SYNC PANEL (Google Drive) ───────────────────────────────────────────────
+
+function SyncPanel({ gUser, gClientId, syncMode, syncStatus, onSignIn, onSignOut, onSetClientId, onSetMode, onPushNow, onPullNow }) {
+  const [cid, setCid] = useState(gClientId || '');
+  const [showHelp, setShowHelp] = useState(false);
+  const saveCid = () => { onSetClientId(cid.trim()); };
+  const last = syncStatus.last ? new Date(syncStatus.last).toLocaleString('en-IN') : '—';
+  return (
+    <div className="card" style={{ marginBottom:18 }}>
+      <div className="card-header">
+        <div className="card-title">☁️ Google Drive Sync</div>
+        <button className="btn btn-ghost btn-sm" onClick={()=>setShowHelp(s=>!s)}>{showHelp?'Hide':'Setup'} Help</button>
+      </div>
+      {showHelp && (
+        <div className="alert alert-info" style={{ marginBottom:12 }}>
+          <span>ℹ️</span>
+          <div style={{ fontSize:11.5, lineHeight:1.6 }}>
+            1. Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color:'#818CF8' }}>Google Cloud Console → Credentials</a>.<br/>
+            2. Create an <b>OAuth 2.0 Client ID</b> (Web application). Add this page's origin (e.g. <code>http://localhost:8080</code> or your hosted domain) to <b>Authorized JavaScript origins</b>.<br/>
+            3. Enable the <b>Google Drive API</b>.<br/>
+            4. Copy the Client ID below and Sign In.
+          </div>
+        </div>
+      )}
+      <div className="form-group" style={{ marginBottom:12 }}>
+        <label>Google OAuth Client ID</label>
+        <div style={{ display:'flex', gap:7 }}>
+          <input value={cid} onChange={e=>setCid(e.target.value)} placeholder="xxxxxxxxxxxx.apps.googleusercontent.com" style={{ fontFamily:'monospace', fontSize:11.5 }}/>
+          <button className="btn btn-secondary btn-sm" onClick={saveCid} disabled={!cid.trim() || cid.trim()===gClientId}>Save</button>
+        </div>
+      </div>
+      <div style={{ background:'var(--card2)', borderRadius:11, padding:'12px 14px', marginBottom:12 }}>
+        {gUser ? (
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            {gUser.picture && <img src={gUser.picture} alt="" style={{ width:36, height:36, borderRadius:'50%' }}/>}
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:12.5, fontWeight:700 }}>{gUser.name || gUser.email}</div>
+              <div style={{ fontSize:10.5, color:'var(--text2)' }}>{gUser.email}</div>
+            </div>
+            <button className="btn btn-danger btn-sm" onClick={onSignOut}>Sign Out</button>
+          </div>
+        ) : (
+          <button className="btn btn-gcal" onClick={onSignIn} disabled={!gClientId} style={{ width:'100%', justifyContent:'center' }}>
+            🔐 Sign In with Google
+          </button>
+        )}
+      </div>
+      <div className="form-group" style={{ marginBottom:12 }}>
+        <label>Sync Mode</label>
+        <div style={{ display:'flex', gap:6 }}>
+          {[{v:'off',l:'⏸️ Off'},{v:'manual',l:'👆 Manual'},{v:'auto',l:'⚡ Auto (3s debounced)'}].map(o=>(
+            <button key={o.v} onClick={()=>onSetMode(o.v)} disabled={!gUser && o.v!=='off'} style={{ flex:1, padding:'8px 10px', borderRadius:9, border:`1px solid ${syncMode===o.v?'var(--primary)':'var(--border)'}`, background:syncMode===o.v?'rgba(255,107,53,.12)':'var(--card2)', color:syncMode===o.v?'var(--primary)':'var(--text2)', cursor:gUser||o.v==='off'?'pointer':'not-allowed', fontSize:11.5, fontWeight:600, fontFamily:'Outfit,sans-serif' }}>{o.l}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display:'flex', gap:7, marginBottom:10 }}>
+        <button className="btn btn-primary btn-sm" onClick={onPushNow} disabled={!gUser} style={{ flex:1, justifyContent:'center' }}>⬆️ Sync Now (Push)</button>
+        <button className="btn btn-secondary btn-sm" onClick={onPullNow} disabled={!gUser} style={{ flex:1, justifyContent:'center' }}>⬇️ Pull from Drive</button>
+      </div>
+      <div style={{ fontSize:10.5, color:syncStatus.error?'var(--accent3)':'var(--text3)', display:'flex', justifyContent:'space-between', gap:8, flexWrap:'wrap' }}>
+        <span>Status: <b style={{ color: syncStatus.state==='error'?'var(--accent3)':syncStatus.state==='syncing'?'var(--accent2)':syncStatus.state==='synced'?'var(--accent)':'var(--text2)' }}>{syncStatus.state}</b></span>
+        <span>Last synced: {last}</span>
+        {syncStatus.error && <span>⚠️ {syncStatus.error}</span>}
+      </div>
+    </div>
+  );
+}
+
 // ─── PROFILE ─────────────────────────────────────────────────────────────────
 
-function ProfileView({ profile, onSave }) {
+function ProfileView({ profile, onSave, syncProps, aiCfg, onAiChange }) {
   const [form, setForm] = useState(profile);
   const [saved, setSaved] = useState(false);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
@@ -1054,9 +1356,33 @@ function ProfileView({ profile, onSave }) {
     { key:'mcaConsultant', label:'MCA/CS Consultant', cat:'mca' },
   ];
 
+  const previewCounts = useMemo(() => {
+    const items = generateCompliances(form.entityType);
+    const buckets = { it:0, gst:0, mca:0, pf:0, pt:0 };
+    items.forEach(i => {
+      if (i.cat==='it' || i.cat==='itr') buckets.it++;
+      else if (buckets[i.cat] !== undefined) buckets[i.cat]++;
+    });
+    return buckets;
+  }, [form.entityType]);
+
+  const CHIPS = [
+    { k:'it',  label:'Income Tax', color:'#EF4444' },
+    { k:'gst', label:'GST',        color:'#10B981' },
+    { k:'mca', label:'MCA/ROC',    color:'#8B5CF6' },
+    { k:'pf',  label:'EPF/PF',     color:'#F59E0B' },
+    { k:'pt',  label:'Prof. Tax',  color:'#EC4899' },
+  ];
+
   return (
     <div className="page fade-in">
       {saved&&<div className="alert alert-success fade-in" style={{ marginBottom:14 }}>✅ Profile saved! Compliance calendar updated.</div>}
+
+      {/* AI Settings */}
+      {aiCfg && <AISettingsPanel aiCfg={aiCfg} onChange={onAiChange}/>}
+
+      {/* Google Drive Sync */}
+      {syncProps && <SyncPanel {...syncProps}/>}
 
       {/* Entity */}
       <div className="card" style={{ marginBottom:18 }}>
@@ -1072,6 +1398,29 @@ function ProfileView({ profile, onSave }) {
             </div>
           ))}
         </div>
+        {form.entityType && (
+          <div style={{ marginTop:14, padding:'11px 13px', background:'var(--card2)', borderRadius:11, border:'1px solid var(--border)' }}>
+            <div style={{ fontSize:10.5, color:'var(--text3)', fontWeight:700, textTransform:'uppercase', letterSpacing:'.8px', marginBottom:8 }}>📊 Applicable Compliances Preview</div>
+            <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
+              {CHIPS.map(ch => (
+                <div key={ch.k} style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 11px', borderRadius:18, background:`${ch.color}15`, border:`1px solid ${ch.color}40` }}>
+                  <span style={{ fontSize:10.5, color:ch.color, fontWeight:700 }}>{ch.label}</span>
+                  <span style={{ fontSize:11, fontWeight:800, color:previewCounts[ch.k]?ch.color:'var(--text3)' }}>{previewCounts[ch.k]}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:10.5, color:'var(--text3)', marginTop:7 }}>Save profile to apply these compliances to your calendar.</div>
+          </div>
+        )}
+        {form.entityType && aiCfg && (
+          <div style={{ marginTop:12 }}>
+            <AIInsight aiCfg={aiCfg}
+              label="🤖 Entity-Specific Compliance Guide"
+              buttonText="Explain My Compliances"
+              cacheKey={`entity_${form.entityType}_${form.state||''}`}
+              prompt={`I operate as a ${ENTITY_TYPES.find(e=>e.id===form.entityType)?.name} in ${form.state||'India'} (business type: ${form.bizType||'general'}). Explain the key Indian tax & compliance obligations I must meet across Income Tax, GST, MCA/ROC, EPF, and Professional Tax. Call out entity-specific pitfalls, typical due-date clusters, and top 3 risks to watch. Use a concise bullet structure.`}/>
+          </div>
+        )}
       </div>
 
       {/* Basic Info */}
@@ -1493,6 +1842,17 @@ function App() {
   const [portals, setPortals] = useState(() => loadPersist('portals', PORTAL_DEFAULTS));
   const [activePage, setActivePage] = useState('dashboard');
 
+  // Google Drive sync state
+  const [gUser, setGUser] = useState(() => loadPersist('guser', null));
+  const [gClientId, setGClientId] = useState(() => loadPersist('gclient', ''));
+  const [syncMode, setSyncMode] = useState(() => loadPersist('syncmode', 'off'));
+  const [syncStatus, setSyncStatus] = useState({ state:'idle', last: loadPersist('synclast', null), error:null });
+  const didInitialPull = useRef(false);
+
+  // AI config
+  const [aiCfg, setAiCfg] = useState(() => loadPersist('aicfg', { provider:'groq', keys:{} }));
+  useEffect(() => { savePersist('aicfg', aiCfg); }, [aiCfg]);
+
   // Apply theme to body
   useEffect(() => {
     document.body.className = theme === 'light' ? 'light' : '';
@@ -1525,6 +1885,78 @@ function App() {
   useEffect(() => { savePersist('profile', profile); }, [profile]);
   useEffect(() => { if (tasks) savePersist('tasks', tasks); }, [tasks]);
   useEffect(() => { savePersist('portals', portals); }, [portals]);
+  useEffect(() => { savePersist('guser', gUser); }, [gUser]);
+  useEffect(() => { savePersist('gclient', gClientId); }, [gClientId]);
+  useEffect(() => { savePersist('syncmode', syncMode); }, [syncMode]);
+
+  const doPush = useCallback(async () => {
+    if (!gUser) return;
+    setSyncStatus(s => ({ ...s, state:'syncing', error:null }));
+    try {
+      await driveSync.pushState({ profile, tasks, portals });
+      const now = new Date().toISOString();
+      savePersist('synclast', now);
+      setSyncStatus({ state:'synced', last: now, error:null });
+    } catch(e) {
+      setSyncStatus(s => ({ ...s, state:'error', error: e?.result?.error?.message || e?.message || 'Sync failed' }));
+    }
+  }, [gUser, profile, tasks, portals]);
+
+  const doPull = useCallback(async () => {
+    if (!gUser) return;
+    setSyncStatus(s => ({ ...s, state:'syncing', error:null }));
+    try {
+      const data = await driveSync.pullState();
+      if (data) {
+        if (data.profile) setProfile(data.profile);
+        if (data.tasks) setTasks(data.tasks);
+        if (data.portals) setPortals(data.portals);
+        const now = new Date().toISOString();
+        savePersist('synclast', now);
+        setSyncStatus({ state:'synced', last: now, error:null });
+      } else {
+        setSyncStatus(s => ({ ...s, state:'idle', error:'No backup found on Drive' }));
+      }
+    } catch(e) {
+      setSyncStatus(s => ({ ...s, state:'error', error: e?.result?.error?.message || e?.message || 'Pull failed' }));
+    }
+  }, [gUser]);
+
+  // Auto-sync: debounced push on state changes
+  useEffect(() => {
+    if (syncMode !== 'auto' || !gUser) return;
+    const t = setTimeout(() => { doPush(); }, 3000);
+    return () => clearTimeout(t);
+  }, [profile, tasks, portals, syncMode, gUser, doPush]);
+
+  // Pull once on load if signed in and sync enabled
+  useEffect(() => {
+    if (didInitialPull.current) return;
+    if (gUser && syncMode !== 'off') {
+      didInitialPull.current = true;
+      doPull();
+    }
+  }, [gUser, syncMode, doPull]);
+
+  const handleSignIn = async () => {
+    setSyncStatus(s => ({ ...s, state:'syncing', error:null }));
+    try {
+      const user = await driveSync.signIn(gClientId);
+      setGUser(user);
+      if (syncMode === 'off') setSyncMode('manual');
+      setSyncStatus(s => ({ ...s, state:'idle', error:null }));
+    } catch(e) {
+      setSyncStatus(s => ({ ...s, state:'error', error: e?.message || 'Sign-in failed' }));
+    }
+  };
+  const handleSignOut = () => { driveSync.signOut(); setGUser(null); setSyncMode('off'); didInitialPull.current = false; };
+
+  const syncProps = {
+    gUser, gClientId, syncMode, syncStatus,
+    onSignIn: handleSignIn, onSignOut: handleSignOut,
+    onSetClientId: setGClientId, onSetMode: setSyncMode,
+    onPushNow: doPush, onPullNow: doPull,
+  };
 
   const handleOnboardComplete = prof => {
     setProfile(prof); savePersist('profile', prof);
@@ -1597,11 +2029,11 @@ function App() {
           </div>
         </div>
 
-        {activePage==='dashboard' && <Dashboard profile={profile} tasks={tasks||[]} onNavigate={setActivePage}/>}
-        {activePage==='calendar'  && <CalendarView tasks={tasks||[]} onUpdateTasks={setTasks}/>}
-        {activePage==='tasks'     && <TasksView tasks={tasks||[]} onUpdate={setTasks}/>}
+        {activePage==='dashboard' && <Dashboard profile={profile} tasks={tasks||[]} onNavigate={setActivePage} aiCfg={aiCfg}/>}
+        {activePage==='calendar'  && <CalendarView tasks={tasks||[]} onUpdateTasks={setTasks} aiCfg={aiCfg}/>}
+        {activePage==='tasks'     && <TasksView tasks={tasks||[]} onUpdate={setTasks} aiCfg={aiCfg}/>}
         {activePage==='portals'   && <PortalsView portals={portals} onSave={setPortals}/>}
-        {activePage==='profile'   && <ProfileView profile={profile} onSave={handleProfileSave}/>}
+        {activePage==='profile'   && <ProfileView profile={profile} onSave={handleProfileSave} syncProps={syncProps} aiCfg={aiCfg} onAiChange={setAiCfg}/>}
         {activePage==='data'      && <DataView profile={profile} tasks={tasks||[]} onImport={handleImport} onReset={handleReset}/>}
         {activePage==='about'     && <AboutView/>}
 
